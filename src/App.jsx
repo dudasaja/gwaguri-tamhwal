@@ -170,18 +170,18 @@ const BUILDINGS = [
     id: 'seongsil',
     name: '성실관(본관)',
     shortName: '성실관',
-    subtitle: '1~3학년 교실 · AI실(코딩실) · C-lab · 무한상상실 · 학생회의실',
+    subtitle: '1~3학년 교실 · AI실 · 코딩실 · 무한상상실 · 학생회의실',
     floors: [
       {
         id: '1F',
         label: '1층',
-        subject: 'AI실 (코딩실) · 정보실 · C-lab · 행정구역',
+        subject: 'AI실 · 정보실 · 코딩실 · 행정구역',
         topLabel: '상단 주요 탐구·정보 구역',
         topCols: 3,
         topRooms: [
-          { id: 'ss-1-ai', name: 'AI실', subtitle: '코딩실', type: 'primary' },
+          { id: 'ss-1-ai', name: 'AI실', type: 'primary' },
           { id: 'ss-1-info', name: '정보실', type: 'primary' },
-          { id: 'ss-1-clab', name: 'C-lab', subtitle: '구 멀티실', type: 'primary' }
+          { id: 'ss-1-coding', name: '코딩실', subtitle: '구 멀티실', type: 'primary' }
         ],
         corridorLabel: '성실관 1층 중앙 복도 (서측 계단 ↔ 중앙현관 ↔ 동측 계단)',
         bottomLabel: '하단 행정 · 생활 지원 구역',
@@ -521,13 +521,13 @@ const ROOM_ALIASES = {
   '천문대': 'cu-rf-obs',
 
   // 성실관 (본관) 특별실 & 교실
-  '코딩실': 'ss-1-ai',
+  '코딩실': 'ss-1-coding',
   'ai실': 'ss-1-ai',
   '정보실': 'ss-1-info',
-  '멀티실': 'ss-1-clab',
-  'clab': 'ss-1-clab',
-  'c-lab': 'ss-1-clab',
-  '씨랩': 'ss-1-clab',
+  '멀티실': 'ss-1-coding',
+  'clab': 'ss-1-coding',
+  'c-lab': 'ss-1-coding',
+  '씨랩': 'ss-1-coding',
   '학생회의실': 'ss-4-council',
   '학생회실': 'ss-4-council',
   '무한상상실': 'ss-4-maker',

@@ -75,10 +75,10 @@ const BUILDINGS = {
           { id: 'seongsil_3f_2_1', name: '2-1반 교실', sub: '2학년 학급교실' },
           { id: 'seongsil_3f_2_2', name: '2-2반 교실', sub: '2학년 학급교실' },
           { id: 'seongsil_3f_2_3', name: '2-3반 교실', sub: '2학년 학급교실' },
-          { id: 'seongsil_3f_library', name: '도서관', sub: '면학·독서·자료열람실' },
+          { id: 'seongsil_3f_2_4', name: '2-4반 교실', sub: '2학년 학급교실' },
         ],
         bottomRooms: [
-          { id: 'seongsil_3f_2_4', name: '2-4반 교실', sub: '2학년 학급교실' },
+          { id: 'seongsil_3f_library', name: '도서관', sub: '면학·독서·자료열람실' },
         ],
       },
       '4F': {
@@ -87,12 +87,12 @@ const BUILDINGS = {
         topRooms: [
           { id: 'seongsil_4f_3_1', name: '3-1반 교실', sub: '3학년 학급교실' },
           { id: 'seongsil_4f_3_2', name: '3-2반 교실', sub: '3학년 학급교실' },
-          { id: 'seongsil_4f_maker', name: '무한상상실', sub: '메이커·창작·탐구실' },
-          { id: 'seongsil_4f_council', name: '학생회실', sub: '학생자치회실' },
-        ],
-        bottomRooms: [
           { id: 'seongsil_4f_3_3', name: '3-3반 교실', sub: '3학년 학급교실' },
           { id: 'seongsil_4f_3_4', name: '3-4반 교실', sub: '3학년 학급교실' },
+        ],
+        bottomRooms: [
+          { id: 'seongsil_4f_maker', name: '무한상상실', sub: '메이커·창작·탐구실' },
+          { id: 'seongsil_4f_council', name: '학생회실', sub: '학생자치회실' },
         ],
       },
     },
@@ -127,7 +127,6 @@ const BUILDINGS = {
         bottomRooms: [
           { id: 'chang_2f_phys_prep', name: '물리준비실', sub: '실험·기자재 준비' },
           { id: 'chang_2f_math_lab', name: '수학연구실', sub: '수리·모델링 연구' },
-          { id: 'chang_2f_seminar', name: '기초과학 세미나실', sub: '발표·토론구역' },
         ],
       },
       '3F': {

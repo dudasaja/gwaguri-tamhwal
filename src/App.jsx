@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 /**
  * ============================================================================
- * 0. 자체 인라인 SVG 아이콘 컴포넌트 (React 18/19 환경 호환성 100% 보장)
+ * 0. 자체 인라인 SVG 아이콘 컴포넌트 (외부 아이콘 패키지 의존성 제로)
  * ============================================================================
  */
 function Icon({ children, className = 'h-4 w-4' }) {
@@ -127,13 +127,6 @@ const CheckCircleIcon = ({ className }) => (
   </Icon>
 );
 
-const EyeIcon = ({ className }) => (
-  <Icon className={className}>
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </Icon>
-);
-
 const ChevronLeftIcon = ({ className }) => (
   <Icon className={className}>
     <polyline points="15 18 9 12 15 6" />
@@ -158,11 +151,19 @@ const ChevronDownIcon = ({ className }) => (
   </Icon>
 );
 
+const AlertTriangleIcon = ({ className }) => (
+  <Icon className={className}>
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </Icon>
+);
+
 /**
  * ============================================================================
  * 1. 전남과학고등학교 3개 건물 · 2단 블록 그리드 층별 평면도 데이터 정의
- *    - 모든 층이 '상단 구역 / 중앙 복도 바 / 하단 구역'의 3~4열 블록 배치로
- *      글씨 잘림이나 세로 한 글자 줄바꿈이 발생하지 않도록 체계적으로 설계
+ *    - 모든 층이 '상단 구역 / 중앙 복도 / 하단 구역'의 3~4열 블록 배치로
+ *      글씨 세로 줄바꿈이나 카드 겹침이 발생하지 않도록 구성
  * ============================================================================
  */
 const BUILDINGS = [
@@ -175,30 +176,29 @@ const BUILDINGS = [
       {
         id: '1F',
         label: '1층',
-        subject: 'AI실 · 정보실 · 코딩실 · 행정구역',
-        topLabel: '상단 주요 탐구·정보 구역',
-        topCols: 3,
+        subject: '행정실 · AI실 · 정보실 · 코딩실',
+        topLabel: '상단 행정 · 교직원 구역',
+        topCols: 4,
         topRooms: [
-          { id: 'ss-1-ai', name: 'AI실', type: 'primary' },
-          { id: 'ss-1-info', name: '정보실', type: 'primary' },
-          { id: 'ss-1-coding', name: '코딩실', subtitle: '구 멀티실', type: 'primary' }
-        ],
-        corridorLabel: '성실관 1층 중앙 복도 (서측 계단 ↔ 중앙현관 ↔ 동측 계단)',
-        bottomLabel: '하단 행정 · 생활 지원 구역',
-        bottomCols: 3,
-        bottomRooms: [
           { id: 'ss-1-health', name: '보건실', type: 'facility' },
           { id: 'ss-1-council', name: '교직원협의실', type: 'facility' },
           { id: 'ss-1-prin', name: '교장실', type: 'facility' },
-          { id: 'ss-1-office', name: '행정실', type: 'facility' },
-          { id: 'ss-1-print', name: '발간실', type: 'facility' },
-          { id: 'ss-1-cafeteria', name: '급식실', type: 'facility' }
+          { id: 'ss-1-office', name: '행정실', type: 'facility' }
+        ],
+        corridorLabel: '1층 복도 (서측 계단 ↔ 중앙현관 ↔ 동측 계단)',
+        bottomLabel: '하단 정보 · 코딩 · 생활 구역',
+        bottomCols: 4,
+        bottomRooms: [
+          { id: 'ss-1-ai', name: 'AI실', type: 'primary' },
+          { id: 'ss-1-info', name: '정보실', type: 'primary' },
+          { id: 'ss-1-clab', name: '코딩실', subtitle: '구 멀티실', type: 'primary' },
+          { id: 'ss-1-cafeteria', name: '급식실 · 중앙현관', type: 'facility' }
         ]
       },
       {
         id: '2F',
         label: '2층',
-        subject: '1학년 교실 · 특별실 · 교무 행정 구역',
+        subject: '1학년 교실 · 특별실 · 교무실',
         topLabel: '상단 1학년 교실 구역',
         topCols: 4,
         topRooms: [
@@ -207,19 +207,15 @@ const BUILDINGS = [
           { id: 'ss-2-103', name: '1-3', subtitle: '1학년 3반 교실', type: 'classroom' },
           { id: 'ss-2-104', name: '1-4', subtitle: '1학년 4반 교실', type: 'classroom' }
         ],
-        corridorLabel: '성실관 2층 복도',
+        corridorLabel: '2층 복도 · 창의관 2층 연결통로 방면 →',
         hasBridgeToChangui: true,
-        bottomLabel: '하단 특별실 · 교무 행정 구역',
+        bottomLabel: '하단 특별실 · 교무 지원 구역',
         bottomCols: 4,
         bottomRooms: [
           { id: 'ss-2-hist', name: '역사관', type: 'primary' },
           { id: 'ss-2-broad', name: '방송실', type: 'primary' },
-          { id: 'ss-2-t1', name: '1학년실', type: 'facility' },
-          { id: 'ss-2-staff', name: '교무실', type: 'facility' },
-          { id: 'ss-2-vp', name: '교감실', type: 'facility' },
-          { id: 'ss-2-adm', name: '입학담당관실', type: 'facility' },
-          { id: 'ss-2-dorm', name: '사감실', type: 'facility' },
-          { id: 'ss-2-study', name: '면학실', type: 'facility' }
+          { id: 'ss-2-staff', name: '교무실 · 1학년실', type: 'facility' },
+          { id: 'ss-2-study', name: '면학실 · 사감실', type: 'facility' }
         ]
       },
       {
@@ -234,15 +230,14 @@ const BUILDINGS = [
           { id: 'ss-3-203', name: '2-3', subtitle: '2학년 3반 교실', type: 'classroom' },
           { id: 'ss-3-204', name: '2-4', subtitle: '2학년 4반 교실', type: 'classroom' }
         ],
-        corridorLabel: '성실관 3층 중앙 복도',
-        bottomLabel: '하단 특별실 · 학습 지원 구역',
-        bottomCols: 3,
+        corridorLabel: '3층 복도',
+        bottomLabel: '하단 도서관 · 학습 지원 구역',
+        bottomCols: 4,
         bottomRooms: [
-          { id: 'ss-3-hist', name: '역사관', type: 'primary' },
           { id: 'ss-3-lib1', name: '도서관', type: 'primary' },
           { id: 'ss-3-lib2', name: '도서실', type: 'primary' },
-          { id: 'ss-3-t2', name: '2학년실', type: 'facility' },
-          { id: 'ss-3-study', name: '면학실', type: 'facility' }
+          { id: 'ss-3-hist', name: '역사관', type: 'primary' },
+          { id: 'ss-3-t2', name: '2학년실 · 면학실', type: 'facility' }
         ]
       },
       {
@@ -257,16 +252,14 @@ const BUILDINGS = [
           { id: 'ss-4-303', name: '3-3', subtitle: '3학년 3반 교실', type: 'classroom' },
           { id: 'ss-4-304', name: '3-4', subtitle: '3학년 4반 교실', type: 'classroom' }
         ],
-        corridorLabel: '성실관 4층 중앙 복도',
-        bottomLabel: '하단 특별실 · 학생자치 · 학습 지원 구역',
-        bottomCols: 3,
+        corridorLabel: '4층 복도',
+        bottomLabel: '하단 특별실 · 학생자치 구역',
+        bottomCols: 4,
         bottomRooms: [
-          { id: 'ss-4-council', name: '학생회의실', type: 'primary' },
           { id: 'ss-4-maker', name: '무한상상실', type: 'primary' },
+          { id: 'ss-4-council', name: '학생회의실', type: 'primary' },
           { id: 'ss-4-math', name: '수학실', type: 'primary' },
-          { id: 'ss-4-lang', name: '어학실', type: 'primary' },
-          { id: 'ss-4-t3', name: '3학년실', type: 'facility' },
-          { id: 'ss-4-study', name: '면학실', type: 'facility' }
+          { id: 'ss-4-lang', name: '어학실', type: 'primary' }
         ]
       }
     ]
@@ -281,64 +274,72 @@ const BUILDINGS = [
         id: '1F',
         label: '1층',
         subject: '지구과학 & 시청각실',
-        topLabel: '상단 지구과학 실험 · 연구 구역',
+        topLabel: '상단 지구과학 R&E · 연구 · 박편 구역',
         topCols: 3,
         topRooms: [
-          { id: 'cu-1-lab', name: '지구과학 실험실', type: 'primary' },
           { id: 'cu-1-rne', name: '지구과학 R&E실', type: 'primary' },
-          { id: 'cu-1-res', name: '지구과학 연구실', type: 'primary' }
+          { id: 'cu-1-res', name: '지구과학 연구실', type: 'primary' },
+          { id: 'cu-1-thin', name: '박편 제작실', type: 'primary' }
         ],
-        corridorLabel: '창의관 1층 지구과학 구역 복도 (엘리베이터 · 계단)',
-        bottomLabel: '하단 특수실 · 시청각 · 준비 구역',
+        corridorLabel: '1층 지구과학 중앙 복도',
+        bottomLabel: '하단 지구과학 실험 · 준비 · 시청각 구역',
         bottomCols: 3,
         bottomRooms: [
-          { id: 'cu-1-thin', name: '박편 제작실', type: 'primary' },
-          { id: 'cu-1-av', name: '시청각실', type: 'primary' },
-          { id: 'cu-1-prep', name: '지구과학 실험 준비실', type: 'facility' }
+          { id: 'cu-1-lab', name: '지구과학 실험실', type: 'primary' },
+          { id: 'cu-1-prep', name: '지구과학 실험 준비실', type: 'facility' },
+          { id: 'cu-1-av', name: '시청각실', type: 'primary' }
         ]
       },
       {
         id: '2F',
         label: '2층',
         subject: '물리학 & 수학',
-        topLabel: '상단 물리 실험 · 수학 구역',
+        topLabel: '상단 연결 통로 · 수학실 구역',
         topCols: 4,
         topRooms: [
-          { id: 'cu-2-lab', name: '물리 실험실', type: 'primary' },
-          { id: 'cu-2-rne', name: '물리 R&E실', type: 'primary' },
+          {
+            id: 'cu-2-bridge',
+            name: '본관 연결 통로',
+            subtitle: '성실관 2층 바로가기',
+            type: 'bridge',
+            targetBuildingId: 'seongsil',
+            targetFloorId: '2F',
+            targetRoomId: 'ss-2-101'
+          },
+          { id: 'cu-2-parent', name: '학부모회실', type: 'facility' },
           { id: 'cu-2-math1', name: '수학실1', type: 'primary' },
           { id: 'cu-2-math2', name: '수학실2', type: 'primary' }
         ],
-        corridorLabel: '창의관 2층 물리·수학 복도',
-        hasBridgeToSeongsil: true,
-        bottomLabel: '하단 연구 · 특수실험 · 지원 구역',
-        bottomCols: 3,
+        corridorLabel: '2층 물리학 · 수학 중앙 복도',
+        bottomLabel: '하단 물리 실험 · R&E · 특수실험 구역',
+        bottomCols: 4,
         bottomRooms: [
+          { id: 'cu-2-lab', name: '물리 실험실', type: 'primary' },
+          { id: 'cu-2-rne', name: '물리 R&E실', type: 'primary' },
           { id: 'cu-2-res', name: '물리 연구실', type: 'primary' },
           { id: 'cu-2-fluid', name: '유체역학 실험실', type: 'primary' },
           { id: 'cu-2-sem', name: 'SEM실 + 풍동실', type: 'primary' },
           { id: 'cu-2-dark', name: '암실', type: 'primary' },
-          { id: 'cu-2-prep', name: '물리 실험 준비실', type: 'facility' },
-          { id: 'cu-2-parent', name: '학부모회실', type: 'facility' }
+          { id: 'cu-2-prep', name: '물리 실험 준비실', type: 'facility' }
         ]
       },
       {
         id: '3F',
         label: '3층',
-        subject: '생물학 (Biology)',
-        topLabel: '상단 생명과학 실험 · 연구 구역',
+        subject: '생명과학 (Biology)',
+        topLabel: '상단 생명과학 R&E · 연구 · 배양 구역',
         topCols: 3,
         topRooms: [
-          { id: 'cu-3-lab', name: '생명과학 실험실', type: 'primary' },
           { id: 'cu-3-rne', name: '생명과학 R&E실', type: 'primary' },
-          { id: 'cu-3-res', name: '생명과학 연구실', type: 'primary' }
+          { id: 'cu-3-res', name: '생명과학 연구실', type: 'primary' },
+          { id: 'cu-3-cult', name: '미생물 배양실', type: 'primary' }
         ],
-        corridorLabel: '창의관 3층 생명과학 구역 복도 (엘리베이터 · 계단)',
-        bottomLabel: '하단 특수실험 · 배양 · 준비 구역',
+        corridorLabel: '3층 생명과학 중앙 복도',
+        bottomLabel: '하단 생명과학 실험 · 분자 · 준비 구역',
         bottomCols: 3,
         bottomRooms: [
+          { id: 'cu-3-lab', name: '생명과학 실험실', type: 'primary' },
           { id: 'cu-3-mol', name: '분자실험실', type: 'primary' },
-          { id: 'cu-3-cult', name: '미생물 배양실', type: 'primary' },
           { id: 'cu-3-prep', name: '생명과학 실험 준비실', type: 'facility' }
         ]
       },
@@ -346,18 +347,18 @@ const BUILDINGS = [
         id: '4F',
         label: '4층',
         subject: '화학 (Chemistry)',
-        topLabel: '상단 화학 실험 · 연구 구역',
+        topLabel: '상단 화학 R&E · 연구 · 기기분석 구역',
         topCols: 3,
         topRooms: [
-          { id: 'cu-4-lab', name: '화학 실험실', type: 'primary' },
           { id: 'cu-4-rne', name: '화학 R&E실', type: 'primary' },
-          { id: 'cu-4-res', name: '화학 연구실', type: 'primary' }
+          { id: 'cu-4-res', name: '화학 연구실', type: 'primary' },
+          { id: 'cu-4-inst', name: '기기분석실', type: 'primary' }
         ],
-        corridorLabel: '창의관 4층 화학 구역 복도 (엘리베이터 · 계단)',
-        bottomLabel: '하단 기기분석 · 시약 · 준비 구역',
+        corridorLabel: '4층 화학 중앙 복도',
+        bottomLabel: '하단 화학 실험 · 시약 · 준비 구역',
         bottomCols: 3,
         bottomRooms: [
-          { id: 'cu-4-inst', name: '기기분석실', type: 'primary' },
+          { id: 'cu-4-lab', name: '화학 실험실', type: 'primary' },
           { id: 'cu-4-reag', name: '기기실 + 시약실', type: 'primary' },
           { id: 'cu-4-prep', name: '화학 실험 준비실', type: 'facility' }
         ]
@@ -376,7 +377,7 @@ const BUILDINGS = [
             type: 'primary'
           }
         ],
-        corridorLabel: 'ROOFTOP OBSERVATORY · 옥상 야외 관측 데크',
+        corridorLabel: '창의관 옥상 천체관측 데크',
         bottomCols: 1,
         bottomRooms: []
       }
@@ -400,7 +401,7 @@ const BUILDINGS = [
           { id: 'sc-1-inst', name: '기악실', subtitle: '주요 활용', type: 'primary' },
           { id: 'sc-1-art', name: '미술실', subtitle: '주요 활용', type: 'primary' }
         ],
-        corridorLabel: '성취관 1층 예체능실 중앙 복도',
+        corridorLabel: '성취관 1층 예체능실 복도',
         bottomLabel: '하단 실내 체육 · 연습 구역',
         bottomCols: 4,
         bottomRooms: [
@@ -424,7 +425,7 @@ const BUILDINGS = [
             type: 'primary'
           }
         ],
-        corridorLabel: '강당 무대 / 단상 (STAGE)',
+        corridorLabel: '성취관 2층 강당 무대 / 단상',
         bottomCols: 1,
         bottomRooms: []
       }
@@ -442,6 +443,7 @@ BUILDINGS.forEach((b) => {
   b.floors.forEach((f) => {
     const floorRooms = [...(f.topRooms || []), ...(f.bottomRooms || [])];
     floorRooms.forEach((r) => {
+      if (r.type === 'bridge') return;
       const enriched = {
         ...r,
         buildingId: b.id,
@@ -493,7 +495,8 @@ const ROOM_ALIASES = {
   '시약실': 'cu-4-reag',
   '기기실+시약실': 'cu-4-reag',
 
-  // 창의관 3층 생물학
+  // 창의관 3층 생명과학 (생명과학실 포함)
+  '생명과학실': 'cu-3-lab',
   '생명과학실험실': 'cu-3-lab',
   '생물실험실': 'cu-3-lab',
   '생물실': 'cu-3-lab',
@@ -509,9 +512,9 @@ const ROOM_ALIASES = {
   '미생물배양실': 'cu-3-cult',
 
   // 창의관 1층 지구과학 & 옥상 천문대
+  '지구과학실': 'cu-1-lab',
   '지구과학실험실': 'cu-1-lab',
   '지학실험실': 'cu-1-lab',
-  '지구과학실': 'cu-1-lab',
   '지구과학r&e': 'cu-1-rne',
   '지구과학r&e실': 'cu-1-rne',
   '지구과학연구실': 'cu-1-res',
@@ -521,13 +524,13 @@ const ROOM_ALIASES = {
   '천문대': 'cu-rf-obs',
 
   // 성실관 (본관) 특별실 & 교실
-  '코딩실': 'ss-1-coding',
+  '코딩실': 'ss-1-clab',
+  '멀티실': 'ss-1-clab',
+  'clab': 'ss-1-clab',
+  'c-lab': 'ss-1-clab',
+  '씨랩': 'ss-1-clab',
   'ai실': 'ss-1-ai',
   '정보실': 'ss-1-info',
-  '멀티실': 'ss-1-coding',
-  'clab': 'ss-1-coding',
-  'c-lab': 'ss-1-coding',
-  '씨랩': 'ss-1-coding',
   '학생회의실': 'ss-4-council',
   '학생회실': 'ss-4-council',
   '무한상상실': 'ss-4-maker',
@@ -630,7 +633,7 @@ function resolveRoomByName(rawLocation, fallbackContent = '') {
 
 /**
  * ============================================================================
- * 3. 과구리 실제 원문 샘플 데이터 (21건)
+ * 3. 과구리 최신 탐활서 원문 기본 데이터 (총 27건 전체 반영)
  * ============================================================================
  */
 const DEFAULT_GWAGURI_RAW_TEXT = `10월 12일 07시 07분 29초
@@ -723,6 +726,46 @@ const DEFAULT_GWAGURI_RAW_TEXT = `10월 12일 07시 07분 29초
 참가학생2101김서율, 2116 정수현, 2115정도연, 2302강다희
 지도교사양용해
 지원X
+11월 16일 17시 02분 35초
+
+활동날짜2026-11-16
+활동시간19:10 ~ 20:20, 20:30 ~ 21:30
+활동장소물리실험실
+활동내용물리학 실험
+대표학생1203김웅
+참가학생1203김웅, 1208박제경, 1213이시후, 1219황연준
+지도교사강대혁
+지원X
+11월 16일 17시 21분 34초
+
+활동날짜2026-11-16
+활동시간19:10 ~ 20:20, 20:30 ~ 21:30
+활동장소생명과학실
+활동내용생명탐구
+대표학생1201김슬우
+참가학생1315이서진
+지도교사김창진
+지원X
+11월 16일 18시 03분 02초
+
+활동날짜2026-11-16
+활동시간19:10 ~ 20:20, 20:30 ~ 21:30
+활동장소코딩실
+활동내용소프트웨어경시대회준비
+대표학생1111 이미엘
+참가학생1111 이미엘, 1409 신승민, 1319 현명원
+지도교사진정숙
+지원X
+11월 16일 18시 12분 25초
+
+활동날짜2026-11-16
+활동시간19:10 ~ 20:20, 20:30 ~ 21:30
+활동장소물리 실험실
+활동내용물리 탐구활동
+대표학생2111이승찬
+참가학생2111 이승찬, 2108 방시우, 2307 김현우
+지도교사양용해
+지원X
 10월 12일 07시 07분 29초
 
 활동날짜2026-11-17
@@ -753,6 +796,16 @@ const DEFAULT_GWAGURI_RAW_TEXT = `10월 12일 07시 07분 29초
 참가학생2406 박희재, 2410 심재원
 지도교사양용해
 지원X
+11월 16일 17시 22분 09초
+
+활동날짜2026-11-17
+활동시간19:10 ~ 20:20, 20:30 ~ 21:30
+활동장소생명과학실
+활동내용생명탐구
+대표학생1315이서진
+참가학생1102구현준
+지도교사김창진
+지원X
 10월 12일 07시 07분 29초
 
 활동날짜2026-11-18
@@ -782,6 +835,16 @@ const DEFAULT_GWAGURI_RAW_TEXT = `10월 12일 07시 07분 29초
 대표학생2406 박희재
 참가학생2406 박희재, 2410 심재원
 지도교사양용해
+지원X
+11월 16일 17시 22분 42초
+
+활동날짜2026-11-18
+활동시간19:10 ~ 20:20, 20:30 ~ 21:30
+활동장소생명과학실
+활동내용생명탐구
+대표학생1102구현준
+참가학생.
+지도교사김창진
 지원X
 10월 12일 07시 07분 29초
 
@@ -844,11 +907,39 @@ const DEFAULT_GWAGURI_RAW_TEXT = `10월 12일 07시 07분 29초
 지도교사김희웅
 지원X`;
 
+const STORAGE_KEY = 'gwaguri_tamhwal_entries_v2';
+
 /**
  * ============================================================================
- * 4. 과구리 게시판 텍스트 전용 자동 파서
+ * 4. 과구리 게시판 텍스트 전용 자동 파서 (한 줄 & 줄바꿈/탭 복사 형식 모두 완벽 지원)
  * ============================================================================
  */
+const FIELD_LABELS = [
+  '활동날짜',
+  '활동시간',
+  '활동장소',
+  '활동내용',
+  '대표학생',
+  '참가학생',
+  '지도교사',
+  '지원'
+];
+
+const TIMESTAMP_REGEX = /^\d{1,2}월\s*\d{1,2}일\s*\d{1,2}시/;
+
+function matchFieldPrefix(line) {
+  for (const label of FIELD_LABELS) {
+    if (line.startsWith(label)) {
+      const rest = line
+        .slice(label.length)
+        .replace(/^[\s\t:：-]+/, '')
+        .trim();
+      return { label, rest };
+    }
+  }
+  return null;
+}
+
 function parseGwaguriRawText(rawText) {
   if (!rawText || !rawText.trim()) return [];
 
@@ -860,6 +951,7 @@ function parseGwaguriRawText(rawText) {
   const parsedList = [];
   let current = null;
   let lastTimestamp = '';
+  let lastActiveField = null;
 
   const flushCurrent = () => {
     if (!current || !current.date) return;
@@ -891,22 +983,16 @@ function parseGwaguriRawText(rawText) {
     });
   };
 
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-
-    // 신청 시각 줄 (예: 10월 12일 07시 07분 29초)
-    if (/^\d{1,2}월\s*\d{1,2}일\s*\d{1,2}시/.test(line)) {
-      lastTimestamp = line;
-      continue;
-    }
-
-    // 활동날짜 (새 블록 시작)
-    if (line.startsWith('활동날짜')) {
+  const assignFieldValue = (label, value) => {
+    if (label === '활동날짜') {
       flushCurrent();
-      const dateVal = line.replace(/^활동날짜\s*:?\s*/, '').trim();
+      const dateMatch = value.match(/\d{4}[-./]\d{1,2}[-./]\d{1,2}/);
+      const normalizedDate = dateMatch
+        ? dateMatch[0].replace(/[./]/g, '-')
+        : value;
       current = {
         submittedAt: lastTimestamp,
-        date: dateVal,
+        date: normalizedDate,
         timeSlots: [],
         rawLocation: '',
         content: '',
@@ -915,39 +1001,81 @@ function parseGwaguriRawText(rawText) {
         teacher: '',
         support: 'X'
       };
-      continue;
+      return;
     }
 
-    if (!current) continue;
+    if (!current) return;
 
-    if (line.startsWith('활동시간')) {
-      const timeVal = line.replace(/^활동시간\s*:?\s*/, '').trim();
-      current.timeSlots = timeVal
+    if (label === '활동시간') {
+      current.timeSlots = value
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
-    } else if (line.startsWith('활동장소')) {
-      current.rawLocation = line.replace(/^활동장소\s*:?\s*/, '').trim();
-    } else if (line.startsWith('활동내용')) {
-      current.content = line.replace(/^활동내용\s*:?\s*/, '').trim();
-    } else if (line.startsWith('대표학생')) {
-      current.leader = line.replace(/^대표학생\s*:?\s*/, '').trim();
-    } else if (line.startsWith('참가학생')) {
-      const membersStr = line.replace(/^참가학생\s*:?\s*/, '').trim();
-      const splitMembers = membersStr
+    } else if (label === '활동장소') {
+      current.rawLocation = value;
+    } else if (label === '활동내용') {
+      current.content = value;
+    } else if (label === '대표학생') {
+      current.leader = value.replace(/^[.,\s]+|[.,\s]+$/g, '');
+    } else if (label === '참가학생') {
+      const cleanedStr = value.replace(/^[.,\s]+|[.,\s]+$/g, '');
+      const splitMembers = cleanedStr
         .split(',')
-        .map((m) => m.trim())
-        .filter(Boolean);
+        .map((m) => m.replace(/^[.,\s]+|[.,\s]+$/g, '').trim())
+        .filter((m) => m && m !== '.' && m !== '-' && m !== '없음');
 
       if (current.leader && !splitMembers.includes(current.leader)) {
         current.members = [current.leader, ...splitMembers];
       } else {
         current.members = splitMembers;
       }
-    } else if (line.startsWith('지도교사')) {
-      current.teacher = line.replace(/^지도교사\s*:?\s*/, '').trim();
-    } else if (line.startsWith('지원')) {
-      current.support = line.replace(/^지원\s*:?\s*/, '').trim();
+    } else if (label === '지도교사') {
+      current.teacher = value;
+    } else if (label === '지원') {
+      current.support = value;
+    }
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+
+    // 신청 시각 줄 (예: 10월 12일 07시 07분 29초)
+    if (TIMESTAMP_REGEX.test(line)) {
+      lastTimestamp = line;
+      lastActiveField = null;
+      continue;
+    }
+
+    const fieldMatch = matchFieldPrefix(line);
+    if (fieldMatch) {
+      let { label, rest } = fieldMatch;
+
+      // 브라우저에서 표/블록 복사 시 레이블과 값이 다음 줄로 분리된 경우 자동 결합
+      if (!rest && i + 1 < lines.length) {
+        const nextLine = lines[i + 1];
+        if (!TIMESTAMP_REGEX.test(nextLine) && !matchFieldPrefix(nextLine)) {
+          rest = nextLine;
+          i += 1;
+        }
+      }
+
+      assignFieldValue(label, rest);
+      lastActiveField = label;
+      continue;
+    }
+
+    // 여러 줄로 이어진 활동내용 또는 참가학생 보완 처리
+    if (current && lastActiveField === '활동내용') {
+      current.content = `${current.content} ${line}`.trim();
+    } else if (current && lastActiveField === '참가학생') {
+      const extraMembers = line
+        .replace(/^[.,\s]+|[.,\s]+$/g, '')
+        .split(',')
+        .map((m) => m.replace(/^[.,\s]+|[.,\s]+$/g, '').trim())
+        .filter((m) => m && m !== '.' && m !== '-' && m !== '없음');
+      extraMembers.forEach((m) => {
+        if (!current.members.includes(m)) current.members.push(m);
+      });
     }
   }
 
@@ -1142,7 +1270,7 @@ function SamsungCalendarPopover({
                 }}
                 className={`relative flex h-9 w-9 flex-col items-center justify-center rounded-full text-[14px] transition-colors ${
                   isSelected
-                    ? 'bg-[#008cff] font-extrabold text-white shadow-sm'
+                    ? 'bg-[#0095ff] font-extrabold text-white shadow-sm'
                     : isBeforeToday
                     ? 'cursor-not-allowed text-[#5c5e62]'
                     : cell.inCurrentMonth
@@ -1194,10 +1322,21 @@ function SamsungCalendarPopover({
  * ============================================================================
  */
 export default function App() {
-  // 초기 상태: 실제 과구리 21건 데이터 자동 파싱 로드
-  const [entries, setEntries] = useState(() =>
-    parseGwaguriRawText(DEFAULT_GWAGURI_RAW_TEXT)
-  );
+  // 초기 상태: localStorage 저장 데이터가 있으면 불러오고, 없으면 최신 27건 기본 데이터 로드
+  const [entries, setEntries] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // localStorage 접근 불가 환경일 경우 기본 데이터로 진행
+    }
+    return parseGwaguriRawText(DEFAULT_GWAGURI_RAW_TEXT);
+  });
 
   // 화면 전환 상태: 'overview' (건물 3개 센터 화면) | 'building' (건물 층별 평면도)
   const [viewMode, setViewMode] = useState('overview');
@@ -1224,6 +1363,15 @@ export default function App() {
       setToast((prev) => (prev === msg ? null : prev));
     }, 3200);
   };
+
+  // entries 변경 시 localStorage에 자동 동기화
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    } catch {
+      // ignore storage quota errors
+    }
+  }, [entries]);
 
   // 데이터가 존재하는 날짜 집합 (달력 점 표시용)
   const datesWithData = useMemo(() => {
@@ -1284,13 +1432,28 @@ export default function App() {
     return { entriesByRoom: byRoom, offCampusEntries: offCampus };
   }, [filteredEntries]);
 
-  // 건물별 요약 통계
+  // 건물별 & 층별 요약 통계
   const buildingStats = useMemo(() => {
     const result = {};
     BUILDINGS.forEach((b) => {
       let teamCount = 0;
       let activeRooms = 0;
       const duplicateRooms = [];
+      const floorStats = {};
+
+      b.floors.forEach((f) => {
+        const fRooms = ALL_ROOMS.filter(
+          (r) => r.buildingId === b.id && r.floorId === f.id
+        );
+        const fTeams = fRooms.reduce(
+          (sum, r) => sum + (entriesByRoom[r.id]?.length || 0),
+          0
+        );
+        const fHasDup = fRooms.some(
+          (r) => (entriesByRoom[r.id]?.length || 0) >= 2
+        );
+        floorStats[f.id] = { teamCount: fTeams, hasDup: fHasDup };
+      });
 
       ALL_ROOMS.filter((r) => r.buildingId === b.id).forEach((room) => {
         const list = entriesByRoom[room.id] || [];
@@ -1306,7 +1469,8 @@ export default function App() {
       result[b.id] = {
         teamCount,
         activeRooms,
-        duplicateRooms
+        duplicateRooms,
+        floorStats
       };
     });
     return result;
@@ -1402,11 +1566,25 @@ export default function App() {
     setViewMode('building');
   };
 
+  // 특정 건물의 특정 층으로 즉시 네비게이션
+  const navigateToFloor = (buildingId, floorId) => {
+    setSelectedBuildingId(buildingId);
+    setSelectedFloorId(floorId);
+    const floorRooms = ALL_ROOMS.filter(
+      (r) => r.buildingId === buildingId && r.floorId === floorId
+    );
+    const activeR = floorRooms.find(
+      (r) => (entriesByRoom[r.id]?.length || 0) > 0
+    );
+    const defaultR = floorRooms.find((r) => r.type !== 'facility');
+    setSelectedRoomId(activeR?.id || defaultR?.id || null);
+    setViewMode('building');
+  };
+
   // 건물 클릭 진입 핸들러
   const handleEnterBuilding = (buildingId) => {
     const building = BUILDINGS.find((b) => b.id === buildingId);
     if (!building) return;
-    setSelectedBuildingId(buildingId);
 
     const bestFloor =
       building.floors.find((f) =>
@@ -1428,25 +1606,7 @@ export default function App() {
       building.floors.find((f) => f.id === '2F') ||
       building.floors[0];
 
-    const floorId = bestFloor.id;
-    setSelectedFloorId(floorId);
-
-    const activeOrPrimaryRoom =
-      ALL_ROOMS.find(
-        (r) =>
-          r.buildingId === buildingId &&
-          r.floorId === floorId &&
-          (entriesByRoom[r.id]?.length || 0) > 0
-      ) ||
-      ALL_ROOMS.find(
-        (r) =>
-          r.buildingId === buildingId &&
-          r.floorId === floorId &&
-          r.type !== 'facility'
-      );
-
-    setSelectedRoomId(activeOrPrimaryRoom?.id || null);
-    setViewMode('building');
+    navigateToFloor(buildingId, bestFloor.id);
   };
 
   // 붙여넣기 모달 실시간 파싱 미리보기
@@ -1468,7 +1628,17 @@ export default function App() {
 
     setIsPasteModalOpen(false);
     setPasteInput('');
-    showToast(`과구리 탐활 데이터 ${previewParsedEntries.length}건이 지도에 반영되었습니다.`);
+    showToast(`과구리 탐활 데이터 ${previewParsedEntries.length}건이 지도에 반영 및 저장되었습니다.`);
+  };
+
+  // 최신 27건 기본 데이터로 초기화
+  const handleResetToDefaultData = () => {
+    const defaultParsed = parseGwaguriRawText(DEFAULT_GWAGURI_RAW_TEXT);
+    setEntries(defaultParsed);
+    setSelectedDate(TODAY_STR);
+    setIsPasteModalOpen(false);
+    setPasteInput('');
+    showToast(`최신 기본 탐활 데이터 ${defaultParsed.length}건으로 초기화되었습니다.`);
   };
 
   // 현재 활성 건물, 층, 실 객체
@@ -1491,6 +1661,36 @@ export default function App() {
    * ==========================================================================
    */
   const renderRoomTile = (room, minHeightClass = 'min-h-[120px]') => {
+    // 2층 연결통로 특수 카드 처리 (클릭 시 성실관 2층으로 즉시 이동)
+    if (room.type === 'bridge') {
+      return (
+        <button
+          key={room.id}
+          type="button"
+          onClick={() =>
+            navigateToFloor(
+              room.targetBuildingId || 'seongsil',
+              room.targetFloorId || '2F'
+            )
+          }
+          className={`group flex flex-col justify-between border-2 border-dashed border-[#6cb5a8] bg-[#eef8f6] hover:bg-[#dff2ee] p-3.5 text-left transition-colors ${minHeightClass}`}
+        >
+          <div>
+            <span className="inline-block bg-[#5aa396] px-2 py-0.5 text-[11px] font-extrabold text-white">
+              건물 연결통로
+            </span>
+            <h4 className="mt-1.5 text-[15px] sm:text-[16px] font-extrabold text-[#1d3b36] leading-snug">
+              {room.name}
+            </h4>
+          </div>
+          <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-[#25574e] group-hover:underline">
+            <ArrowLeftIcon className="h-3.5 w-3.5" />
+            <span>{room.subtitle || '성실관 2층 이동'}</span>
+          </span>
+        </button>
+      );
+    }
+
     const roomEntries = entriesByRoom[room.id] || [];
     const count = roomEntries.length;
     const isSelected = selectedRoomId === room.id;
@@ -1518,7 +1718,7 @@ export default function App() {
           isSelected ? 'ring-2 ring-[#5aa396] border-[#5aa396] z-10 shadow-sm' : ''
         } ${isSearchHit ? 'ring-2 ring-[#e87a3d] border-[#e87a3d]' : ''}`}
       >
-        {/* 상단: 실 이름(15~16px) & 우측 상단 상태 배지(절대 겹치지 않도록 flex-shrink-0 분리) */}
+        {/* 상단: 실 이름(15~16px) & 우측 상단 상태 배지 */}
         <div className="flex w-full items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h4
@@ -1591,8 +1791,8 @@ export default function App() {
   const getGridColsClass = (cols) => {
     if (cols === 1) return 'grid-cols-1';
     if (cols === 2) return 'grid-cols-1 sm:grid-cols-2';
-    if (cols === 4) return 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4';
-    return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3';
+    if (cols === 4) return 'grid-cols-2 sm:grid-cols-4';
+    return 'grid-cols-1 sm:grid-cols-3';
   };
 
   return (
@@ -1609,10 +1809,10 @@ export default function App() {
       `}</style>
 
       {/* ====================================================================
-          1. 과구리 최상단 민트색 그라데이션 헤더 (높이 64px, 26px 로고)
+          1. 과구리 최상단 민트색 그라데이션 헤더 (높이 60px, 26px 로고)
          ==================================================================== */}
       <header className="w-full bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] text-white">
-        <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between px-4 sm:px-8">
+        <div className="mx-auto flex h-[60px] max-w-[1280px] items-center justify-between px-4 sm:px-8">
           {/* 좌측: 과구리 2x2 사각형 모자이크 로고 + 26px 타이틀 + 부제 */}
           <div className="flex items-center gap-3.5 min-w-0">
             <button
@@ -1639,7 +1839,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* 우측: 공용 데이터 붙여넣기 버튼 (14px) */}
+          {/* 우측: 공용 데이터 붙여넣기 버튼 */}
           <button
             type="button"
             onClick={() => setIsPasteModalOpen(true)}
@@ -1652,7 +1852,7 @@ export default function App() {
       </header>
 
       {/* ====================================================================
-          2. 과구리 2단 흰색 상단 메뉴바 (GNB, 15px 굵은 글씨)
+          2. 과구리 2단 흰색 상단 메뉴바 (GNB)
          ==================================================================== */}
       <nav
         aria-label="과구리 전체 메뉴"
@@ -1720,7 +1920,7 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          3. 메인 중앙 컨테이너 (max-w-[1280px], 여백 축소 + 14~28px 확대 UI)
+          3. 메인 중앙 컨테이너 (max-w-[1280px])
          ==================================================================== */}
       <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 sm:px-8 py-6">
         {/* ==================================================================
@@ -1744,9 +1944,9 @@ export default function App() {
                   <ChevronLeftIcon className="h-5 w-5" />
                 </button>
 
-                {/* 중앙 큰 날짜 표시 (26px~28px) */}
+                {/* 중앙 큰 날짜 표시 */}
                 <div className="flex items-center gap-2.5">
-                  <h1 className="text-[26px] sm:text-[28px] font-extrabold tracking-tight text-[#222222] leading-tight">
+                  <h1 className="text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#222222] leading-tight">
                     {formatShortKoreanDate(selectedDate)}
                   </h1>
                   {selectedDate === TODAY_STR && (
@@ -1792,7 +1992,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* 날짜 아래 요약 지표 & 면학 시간대 필터 (14px~15px) */}
+              {/* 날짜 아래 요약 지표 & 면학 시간대 필터 */}
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[14px] sm:text-[15px]">
                 <span className="text-[#555555]">
                   전체 탐활 <strong className="text-[#222222]">{campusSummary.totalCount}건</strong>
@@ -1838,9 +2038,34 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              {/* 중복 사용실 빠른 점프 칩 (중복 발생 시에만 깔끔하게 표시) */}
+              {campusSummary.duplicateRooms.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-[13px] font-bold text-amber-800">
+                    <AlertTriangleIcon className="h-3.5 w-3.5 text-amber-600" />
+                    중복 사용실 바로가기:
+                  </span>
+                  {campusSummary.duplicateRooms.map((dupRoom) => (
+                    <button
+                      key={dupRoom.id}
+                      type="button"
+                      onClick={() => navigateToRoom(dupRoom)}
+                      className="inline-flex items-center gap-1.5 border border-amber-300 bg-amber-50 hover:bg-amber-100 px-3 py-1 text-[13px] font-bold text-amber-950 transition-colors"
+                    >
+                      <span>
+                        {dupRoom.buildingShortName} {dupRoom.floorLabel} {dupRoom.name}
+                      </span>
+                      <span className="bg-amber-200/80 px-1.5 py-0.2 text-[12px] font-extrabold text-amber-900">
+                        {dupRoom.count}팀
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* 안내 문구 & 학생 이름/학번/실 검색창 */}
+            {/* 안내 문구 & 학생 이름/학번/주제/실 검색창 */}
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[14px] sm:text-[15px] font-medium text-[#555555]">
@@ -1848,13 +2073,13 @@ export default function App() {
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <div className="relative w-64 sm:w-72">
+                  <div className="relative w-64 sm:w-80">
                     <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#888888]" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="학생 이름, 학번, 실 이름 검색..."
+                      placeholder="학생 이름, 학번, 주제, 실 이름 검색..."
                       className="w-full border border-[#dcdcdc] bg-[#fafafa] py-2 pl-9 pr-8 text-[14px] text-[#222222] placeholder:text-[#999999] focus:border-[#6cb5a8] focus:bg-white focus:outline-none"
                     />
                     {searchQuery && (
@@ -1875,13 +2100,13 @@ export default function App() {
                       className="inline-flex items-center gap-1.5 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 text-[14px] font-bold text-indigo-900 transition-colors"
                     >
                       <ExternalLinkIcon className="h-4 w-4 text-indigo-600" />
-                      <span>교외 활동 ({offCampusEntries.length}건)</span>
+                      <span>교외/기타 장소 ({offCampusEntries.length}건)</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* 검색 결과 빠른 이동 배너 (검색어 입력 시에만 표시) */}
+              {/* 검색 결과 빠른 이동 배너 */}
               {normalizedQuery && (
                 <div className="border border-orange-200 bg-orange-50/75 p-3.5">
                   <p className="text-[14px] font-extrabold text-orange-950 mb-2">
@@ -1918,7 +2143,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* 3개 건물 캠퍼스 맵 SVG (한 화면에 잘림 없이 온전히 들어오는 비율 viewBox 1080x365) */}
+              {/* 3개 건물 캠퍼스 맵 SVG (viewBox 1080x365) */}
               <div className="relative overflow-hidden border border-[#dcdcdc] bg-gradient-to-b from-[#e4f3f0] via-[#f1f8f6] to-[#e9f2ea] p-3 sm:p-5">
                 <div
                   className="pointer-events-none absolute inset-0 opacity-25"
@@ -2409,7 +2634,7 @@ export default function App() {
                 </svg>
               </div>
 
-              {/* 하단: 3개 건물 빠른 진입 카드 (여유로운 3열 그리드, 14~17px) */}
+              {/* 하단: 3개 건물 요약 카드 + 층별 바로가기 버튼 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                 {BUILDINGS.map((b) => {
                   const st = buildingStats[b.id];
@@ -2417,7 +2642,7 @@ export default function App() {
                   return (
                     <div
                       key={b.id}
-                      className={`flex flex-col justify-between border bg-white p-4.5 transition-colors ${
+                      className={`flex flex-col justify-between border bg-white p-5 transition-colors ${
                         dupCount > 0 ? 'border-amber-300' : 'border-[#dcdcdc]'
                       }`}
                     >
@@ -2436,7 +2661,7 @@ export default function App() {
                             }`}
                           >
                             {dupCount > 0
-                              ? `중복 ${dupCount}곳`
+                              ? `중복 ${dupCount}곳 · ${st.teamCount}팀`
                               : st.teamCount > 0
                               ? `${st.teamCount}팀 사용 중`
                               : '여유'}
@@ -2445,6 +2670,34 @@ export default function App() {
                         <p className="mt-2 text-[14px] text-[#666666] leading-relaxed">
                           {b.subtitle}
                         </p>
+
+                        {/* 층별 빠른 이동 버튼 */}
+                        <div className="mt-3.5 flex flex-wrap gap-1.5">
+                          {b.floors.map((f) => {
+                            const fStat = st.floorStats[f.id];
+                            return (
+                              <button
+                                key={f.id}
+                                type="button"
+                                onClick={() => navigateToFloor(b.id, f.id)}
+                                className={`inline-flex items-center gap-1 border px-2.5 py-1 text-[12.5px] font-bold transition-colors ${
+                                  fStat?.hasDup
+                                    ? 'border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100'
+                                    : fStat?.teamCount > 0
+                                    ? 'border-[#6cb5a8] bg-[#e6f5f2] text-[#25574e] hover:bg-[#cdebe5]'
+                                    : 'border-[#dcdcdc] bg-[#fafafa] text-[#555555] hover:bg-[#efefef]'
+                                }`}
+                              >
+                                <span>{f.label}</span>
+                                {fStat?.teamCount > 0 && (
+                                  <span className="font-extrabold">
+                                    ({fStat.teamCount})
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <button
@@ -2466,7 +2719,7 @@ export default function App() {
              [건물 내부 뷰] 좌측 2단 블록 그리드 평면도 + 우측 실 상세 정보 패널
              ================================================================== */
           <div className="space-y-5">
-            {/* 상단 네비게이션 바: 건물 전체 맵 복귀 + 건물 탭 + 날짜 이동 */}
+            {/* 상단 네비게이션 바: 캠퍼스 전체지도 복귀 + 건물 탭 + 날짜 이동 */}
             <div className="flex flex-wrap items-center justify-between gap-3 border border-[#dcdcdc] bg-white px-4 sm:px-5 py-3.5">
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -2475,7 +2728,7 @@ export default function App() {
                   className="inline-flex items-center gap-1.5 border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] px-3.5 py-2 text-[14px] font-extrabold text-[#333333] transition-colors"
                 >
                   <ArrowLeftIcon className="h-4 w-4 text-[#5aa396]" />
-                  <span>건물 전체 맵</span>
+                  <span>캠퍼스 전체지도</span>
                 </button>
 
                 <div className="h-5 w-px bg-[#dcdcdc] mx-1 hidden sm:block" />
@@ -2591,16 +2844,7 @@ export default function App() {
                         <button
                           key={floor.id}
                           type="button"
-                          onClick={() => {
-                            setSelectedFloorId(floor.id);
-                            const activeR = floorRooms.find(
-                              (r) => (entriesByRoom[r.id]?.length || 0) > 0
-                            );
-                            const defaultR = floorRooms.find(
-                              (r) => r.type !== 'facility'
-                            );
-                            setSelectedRoomId(activeR?.id || defaultR?.id || null);
-                          }}
+                          onClick={() => navigateToFloor(activeBuilding.id, floor.id)}
                           className={`inline-flex items-center gap-1.5 border px-3.5 py-2 text-[14px] font-extrabold transition-colors ${
                             isFloorSelected
                               ? 'border-[#2d3e40] bg-[#2d3e40] text-white'
@@ -2685,35 +2929,17 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* 2. 중앙 복도 바 (2층 연결통로 빠른 이동 버튼 포함) */}
+                  {/* 2. 중앙 복도 바 */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border border-[#d6d6d6] bg-[#eaeaea] px-4 py-2.5 text-[13px] sm:text-[14px] font-bold text-[#555555]">
                     <span className="mx-auto sm:mx-0">{activeFloor.corridorLabel}</span>
 
                     {activeFloor.hasBridgeToChangui && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelectedBuildingId('changui');
-                          setSelectedFloorId('2F');
-                          setSelectedRoomId('cu-2-lab');
-                        }}
+                        onClick={() => navigateToFloor('changui', '2F')}
                         className="border border-[#5aa396] bg-[#e6f5f2] px-3 py-1 text-[13px] font-extrabold text-[#25574e] hover:bg-[#cdebe5] transition-colors"
                       >
                         창의관 2층 연결통로 이동 →
-                      </button>
-                    )}
-
-                    {activeFloor.hasBridgeToSeongsil && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedBuildingId('seongsil');
-                          setSelectedFloorId('2F');
-                          setSelectedRoomId('ss-2-101');
-                        }}
-                        className="border border-[#5aa396] bg-[#e6f5f2] px-3 py-1 text-[13px] font-extrabold text-[#25574e] hover:bg-[#cdebe5] transition-colors"
-                      >
-                        ← 성실관 2층 연결통로 이동
                       </button>
                     )}
                   </div>
@@ -2907,7 +3133,7 @@ export default function App() {
       </main>
 
       {/* ====================================================================
-          과구리 탐활서 데이터 붙여넣기 모달
+          과구리 탐활서 데이터 붙여넣기 모달 (최신 27건 초기화 + 자동 파싱 미리보기)
          ==================================================================== */}
       {isPasteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -2915,10 +3141,10 @@ export default function App() {
             <div className="flex items-center justify-between bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] px-5 py-4 text-white">
               <div>
                 <h3 className="text-[17px] font-extrabold">
-                  과구리 탐활서 데이터 붙여넣기
+                  과구리 탐활서 데이터 붙여넣기 및 관리
                 </h3>
                 <p className="text-[13px] text-white/95">
-                  과구리(jshsus.kr) 탐활서 게시판의 승인 내역을 복사해 붙여넣으면 자동 파싱됩니다.
+                  과구리(jshsus.kr) 탐활서 내용을 붙여넣으면 자동 파싱 및 브라우저에 저장됩니다.
                 </p>
               </div>
               <button
@@ -2935,19 +3161,26 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <InfoIcon className="h-4 w-4 text-[#5aa396] shrink-0" />
                   <span>
-                    과구리 원문 형식(<code>활동날짜</code>, <code>활동시간</code>,{' '}
-                    <code>활동장소</code>, <code>활동내용</code>, <code>대표학생</code>,{' '}
-                    <code>참가학생</code>, <code>지도교사</code>)을 자동 인식합니다.
+                    한 줄 형식(<code>활동날짜2026-11-16</code>)과 웹 표 복사 줄바꿈 형식 모두 자동 인식합니다.
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setPasteInput(DEFAULT_GWAGURI_RAW_TEXT)}
-                  className="inline-flex items-center gap-1.5 bg-[#5aa396] hover:bg-[#498d81] px-3 py-1.5 text-[13px] font-bold text-white transition-colors"
-                >
-                  <RotateCcwIcon className="h-3.5 w-3.5" />
-                  기본 샘플 데이터(21건) 불러오기
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPasteInput(DEFAULT_GWAGURI_RAW_TEXT)}
+                    className="inline-flex items-center gap-1.5 border border-[#5aa396] bg-white hover:bg-[#e6f5f2] px-3 py-1.5 text-[13px] font-bold text-[#25574e] transition-colors"
+                  >
+                    <span>최신 27건 편집창 채우기</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetToDefaultData}
+                    className="inline-flex items-center gap-1.5 bg-[#5aa396] hover:bg-[#498d81] px-3 py-1.5 text-[13px] font-bold text-white transition-colors"
+                  >
+                    <RotateCcwIcon className="h-3.5 w-3.5" />
+                    <span>최신 27건으로 즉시 초기화</span>
+                  </button>
+                </div>
               </div>
 
               <textarea
@@ -3046,7 +3279,7 @@ export default function App() {
                   onClick={handleApplyPastedText}
                   className="bg-[#5aa396] hover:bg-[#498d81] px-5 py-2 text-[14px] font-bold text-white transition-colors"
                 >
-                  지도에 반영하기
+                  지도에 반영 및 저장하기
                 </button>
               </div>
             </div>

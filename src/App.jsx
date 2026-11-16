@@ -1650,7 +1650,7 @@ export default function App() {
                   <polyline points="984,358 984,334 1012,334 1012,358" />
                 </g>
 
-                {[54, 466, 804, 1076].map((tx, i) => (
+                {[52, 466, 815, 1076].map((tx, i) => (
                   <g key={`tree-${i}`}>
                     <rect x={tx - 3} y="302" width="6" height="18" fill="#6b4423" />
                     <circle cx={tx} cy="292" r="16" fill="#3d8b37" />
@@ -1658,38 +1658,6 @@ export default function App() {
                     <circle cx={tx + 8} cy="297" r="11" fill="#2f752a" />
                   </g>
                 ))}
-
-                {/* 2층 연결통로 */}
-                <g>
-                  <text
-                    x="466"
-                    y="233"
-                    textAnchor="middle"
-                    fontSize="12"
-                    fontWeight="700"
-                    fill="#374151"
-                  >
-                    2층 연결통로
-                  </text>
-                  <rect
-                    x="442"
-                    y="240"
-                    width="48"
-                    height="24"
-                    fill="#dbeafe"
-                    stroke="#8f3b32"
-                    strokeWidth="2"
-                  />
-                  <line
-                    x1="442"
-                    y1="252"
-                    x2="490"
-                    y2="252"
-                    stroke="#64748b"
-                    strokeWidth="1.5"
-                    strokeDasharray="4 3"
-                  />
-                </g>
 
                 {/* ==========================================================
                     [좌측 건물] 성실관 (본관 · 1~4F)
@@ -1699,7 +1667,7 @@ export default function App() {
                   className="cursor-pointer group"
                 >
                   <rect
-                    x="228"
+                    x="224"
                     y="124"
                     width="74"
                     height="16"
@@ -1710,7 +1678,7 @@ export default function App() {
                   />
 
                   <rect
-                    x="74"
+                    x="70"
                     y="130"
                     width="24"
                     height="186"
@@ -1720,7 +1688,7 @@ export default function App() {
                     strokeWidth="1.5"
                   />
                   <rect
-                    x="81"
+                    x="77"
                     y="146"
                     width="10"
                     height="152"
@@ -1729,7 +1697,7 @@ export default function App() {
                   />
 
                   <rect
-                    x="94"
+                    x="90"
                     y="138"
                     width="348"
                     height="178"
@@ -1740,8 +1708,8 @@ export default function App() {
 
                   {[146, 184, 222, 260].map((bandY, rIdx) => (
                     <g key={`ss-band-${rIdx}`}>
-                      <rect x="94" y={bandY} width="348" height="8" fill="#e8e2d5" />
-                      {[112, 146, 180, 214, 304, 338, 372, 406].map((winX, wIdx) => (
+                      <rect x="90" y={bandY} width="348" height="8" fill="#e8e2d5" />
+                      {[108, 142, 176, 210, 300, 334, 368, 402].map((winX, wIdx) => (
                         <rect
                           key={`ss-win-${rIdx}-${wIdx}`}
                           x={winX}
@@ -1758,7 +1726,7 @@ export default function App() {
                   ))}
 
                   <rect
-                    x="244"
+                    x="240"
                     y="232"
                     width="48"
                     height="84"
@@ -1766,7 +1734,7 @@ export default function App() {
                     stroke="#8f3b32"
                     strokeWidth="1.5"
                   />
-                  {[249, 258, 268, 278, 287].map((px, pi) => (
+                  {[245, 254, 264, 274, 283].map((px, pi) => (
                     <line
                       key={`col-${pi}`}
                       x1={px}
@@ -1777,10 +1745,10 @@ export default function App() {
                       strokeWidth="2"
                     />
                   ))}
-                  <rect x="256" y="290" width="24" height="26" fill="#1e293b" />
+                  <rect x="252" y="290" width="24" height="26" fill="#1e293b" />
 
                   <rect
-                    x="156"
+                    x="152"
                     y="80"
                     width="224"
                     height="32"
@@ -1788,7 +1756,7 @@ export default function App() {
                     fill={buildingBadges.seongsil.pillColor}
                   />
                   <text
-                    x="268"
+                    x="264"
                     y="101"
                     textAnchor="middle"
                     fontSize="14"
@@ -1798,9 +1766,9 @@ export default function App() {
                     {buildingBadges.seongsil.statusText}
                   </text>
 
-                  <rect x="160" y="330" width="216" height="32" rx="16" fill="#1f2937" />
+                  <rect x="156" y="330" width="216" height="32" rx="16" fill="#1f2937" />
                   <text
-                    x="268"
+                    x="264"
                     y="351"
                     textAnchor="middle"
                     fontSize="14.5"
@@ -1819,21 +1787,21 @@ export default function App() {
                   className="cursor-pointer group"
                 >
                   <path
-                    d="M 622 126 A 36 32 0 0 1 694 126 Z"
+                    d="M 626 126 A 36 32 0 0 1 698 126 Z"
                     fill="#e5e7eb"
                     stroke="#374151"
                     strokeWidth="2"
                   />
                   <line
-                    x1="658"
+                    x1="662"
                     y1="94"
-                    x2="658"
+                    x2="662"
                     y2="126"
                     stroke="#4b5563"
                     strokeWidth="2"
                   />
                   <text
-                    x="658"
+                    x="662"
                     y="86"
                     textAnchor="middle"
                     fontSize="12.5"
@@ -1844,7 +1812,7 @@ export default function App() {
                   </text>
 
                   <rect
-                    x="490"
+                    x="494"
                     y="126"
                     width="304"
                     height="190"
@@ -1855,8 +1823,8 @@ export default function App() {
 
                   {[134, 174, 214, 254].map((bandY, rIdx) => (
                     <g key={`cu-band-${rIdx}`}>
-                      <rect x="490" y={bandY} width="304" height="7" fill="#e8e2d5" />
-                      {[506, 544, 582, 698, 736, 766].map((winX, wIdx) => (
+                      <rect x="494" y={bandY} width="304" height="7" fill="#e8e2d5" />
+                      {[510, 548, 586, 702, 740, 770].map((winX, wIdx) => (
                         <rect
                           key={`cu-win-${rIdx}-${wIdx}`}
                           x={winX}
@@ -1873,7 +1841,7 @@ export default function App() {
                   ))}
 
                   <rect
-                    x="624"
+                    x="628"
                     y="126"
                     width="68"
                     height="190"
@@ -1884,34 +1852,34 @@ export default function App() {
                   {[156, 196, 236, 276].map((gy, gi) => (
                     <line
                       key={`glass-h-${gi}`}
-                      x1="624"
+                      x1="628"
                       y1={gy}
-                      x2="692"
+                      x2="696"
                       y2={gy}
                       stroke="#e2e8f0"
                       strokeWidth="2"
                     />
                   ))}
                   <line
-                    x1="647"
+                    x1="651"
                     y1="126"
-                    x2="647"
+                    x2="651"
                     y2="316"
                     stroke="#e2e8f0"
                     strokeWidth="1.5"
                   />
                   <line
-                    x1="669"
+                    x1="673"
                     y1="126"
-                    x2="669"
+                    x2="673"
                     y2="316"
                     stroke="#e2e8f0"
                     strokeWidth="1.5"
                   />
-                  <rect x="646" y="292" width="24" height="24" fill="#1e293b" />
+                  <rect x="650" y="292" width="24" height="24" fill="#1e293b" />
 
                   <rect
-                    x="530"
+                    x="534"
                     y="38"
                     width="224"
                     height="32"
@@ -1919,7 +1887,7 @@ export default function App() {
                     fill={buildingBadges.changui.pillColor}
                   />
                   <text
-                    x="642"
+                    x="646"
                     y="59"
                     textAnchor="middle"
                     fontSize="14"
@@ -1929,9 +1897,9 @@ export default function App() {
                     {buildingBadges.changui.statusText}
                   </text>
 
-                  <rect x="524" y="330" width="236" height="32" rx="16" fill="#1f2937" />
+                  <rect x="528" y="330" width="236" height="32" rx="16" fill="#1f2937" />
                   <text
-                    x="642"
+                    x="646"
                     y="351"
                     textAnchor="middle"
                     fontSize="14.5"
@@ -1939,6 +1907,58 @@ export default function App() {
                     fill="#ffffff"
                   >
                     {BUILDINGS.changui.mapLabel}
+                  </text>
+                </g>
+
+                {/* 2층 연결통로 (성실관·창의관 사이 56px 간격 중앙 배치 + 2줄 배지) */}
+                <g>
+                  <rect
+                    x="438"
+                    y="242"
+                    width="56"
+                    height="22"
+                    fill="#dbeafe"
+                    stroke="#8f3b32"
+                    strokeWidth="2"
+                  />
+                  <line
+                    x1="438"
+                    y1="253"
+                    x2="494"
+                    y2="253"
+                    stroke="#64748b"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 3"
+                  />
+                  <rect
+                    x="441"
+                    y="204"
+                    width="50"
+                    height="33"
+                    rx="4"
+                    fill="rgba(255,255,255,0.92)"
+                    stroke="#cbd5e1"
+                    strokeWidth="0.8"
+                  />
+                  <text
+                    x="466"
+                    y="218"
+                    textAnchor="middle"
+                    fontSize="11"
+                    fontWeight="700"
+                    fill="#334155"
+                  >
+                    2층
+                  </text>
+                  <text
+                    x="466"
+                    y="231"
+                    textAnchor="middle"
+                    fontSize="10.5"
+                    fontWeight="700"
+                    fill="#334155"
+                  >
+                    연결통로
                   </text>
                 </g>
 

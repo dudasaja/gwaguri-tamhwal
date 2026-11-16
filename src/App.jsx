@@ -291,21 +291,134 @@ const LOCATION_ALIAS_ENTRIES = [...RAW_ALIAS_ENTRIES].sort(
   (a, b) => b[0].length - a[0].length
 );
 
+/**
+ * 교외·외부 장소 판별 키워드 (대학·연구소·교회·성당·사찰·공공기관·타 지역 등)
+ * 교내 실명보다 먼저 검사하여 '전남대 물리실험실', '시립도서관' 등이 교내로 오분류되지 않도록 방지
+ */
+const OFF_CAMPUS_KEYWORDS = [
+  '교외',
+  '외부',
+  '학교밖',
+  '학교외',
+  '교회',
+  '성당',
+  '사찰',
+  '기도원',
+  '수련원',
+  '대학',
+  '대학교',
+  '전남대',
+  '조선대',
+  '전북대',
+  '과기원',
+  'gist',
+  '지스트',
+  'kaist',
+  '카이스트',
+  'postech',
+  '포항공대',
+  '연구소',
+  '연구원',
+  '연구센터',
+  '진흥원',
+  '개발원',
+  '기술원',
+  '실험원',
+  '과학관',
+  '박물관',
+  '미술관',
+  '기념관',
+  '전시관',
+  '시립도서관',
+  '국립도서관',
+  '도립도서관',
+  '공공도서관',
+  '시청',
+  '도청',
+  '군청',
+  '구청',
+  '주민센터',
+  '행정복지센터',
+  '복지관',
+  '문화센터',
+  '청소년수련관',
+  '병원',
+  '의원',
+  '보건소',
+  '약국',
+  '은행',
+  '우체국',
+  '경찰서',
+  '소방서',
+  '출장',
+  '견학',
+  '답사',
+  '현장학습',
+  '현장탐방',
+  '봉사활동',
+  '나주',
+  '빛가람',
+  '혁신도시',
+  '광주',
+  '화순',
+  '담양',
+  '순천',
+  '여수',
+  '목포',
+  '무안',
+  '영광',
+  '장성',
+  '곡성',
+  '구례',
+  '보성',
+  '고흥',
+  '장흥',
+  '강진',
+  '해남',
+  '완도',
+  '진도',
+  '신안',
+  '서울',
+  '대전',
+  '부산',
+  '대구',
+  '인천',
+  '울산',
+  '세종',
+  '제주',
+  '터미널',
+  '공항',
+  '카페',
+  '호수공원',
+  '금성산',
+  '영산강',
+];
+
 function normalizeLocationToRoomId(rawLocation) {
   if (!rawLocation) return 'external';
   const cleaned = rawLocation.replace(/\s+/g, '').toLowerCase();
-  if (
-    cleaned.includes('교외') ||
-    cleaned.includes('전남대') ||
-    cleaned.includes('지스트') ||
-    cleaned.includes('gist')
-  ) {
+
+  // 1. 명백한 교외·외부 시설/기관/지역 키워드가 포함된 경우 무조건 외부로 분류
+  if (OFF_CAMPUS_KEYWORDS.some((kw) => cleaned.includes(kw))) {
     return 'external';
   }
+
+  // 2. '1학년 2반' 형태 표기 정규화 후 교내 실 사전 매칭
+  const normalizedGradeClass = cleaned.replace(
+    /([1-3])학년([1-4])반/g,
+    '$1-$2'
+  );
   for (const [alias, roomId] of LOCATION_ALIAS_ENTRIES) {
-    if (cleaned.includes(alias)) return roomId;
+    if (normalizedGradeClass.includes(alias)) return roomId;
   }
+
+  // 3. 교내 건물/교실 목록에 전혀 해당하지 않는 낯선 장소는 모두 외부로 취급
   return 'external';
+}
+
+function getExternalPlaceKey(rawLocation) {
+  const label = (rawLocation || '').trim() || '교외 지정 장소';
+  return `external::${label.replace(/\s+/g, '')}`;
 }
 
 function countUniqueStudents(rec) {
@@ -1078,7 +1191,34 @@ export default function App() {
       };
     });
 
+    const extTeams = activitiesByRoom.external?.length || 0;
+    bStats.external = { teams: extTeams, conflictRooms: 0 };
+    bBadges.external = {
+      pillColor: extTeams > 0 ? '#6366f1' : '#6b7280',
+      statusText: extTeams > 0 ? `외부 활동 ${extTeams}팀` : '현재 비어 있음',
+    };
+
     return { buildingStats: bStats, floorStats: fStats, buildingBadges: bBadges };
+  }, [activitiesByRoom]);
+
+  // 외부(교외·외부 장소) 활동을 실제 작성된 장소명별로 그룹화
+  const externalPlaceGroups = useMemo(() => {
+    const extList = activitiesByRoom.external || [];
+    const groupedMap = new Map();
+    extList.forEach((rec) => {
+      const displayName = (rec.rawLocation || '').trim() || '교외 지정 장소';
+      const key = getExternalPlaceKey(displayName);
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, {
+          id: key,
+          name: displayName,
+          sub: '교외 · 외부 활동 장소',
+          records: [],
+        });
+      }
+      groupedMap.get(key).records.push(rec);
+    });
+    return Array.from(groupedMap.values());
   }, [activitiesByRoom]);
 
   // 통합 검색 결과
@@ -1101,6 +1241,19 @@ export default function App() {
 
   // 건물 진입 및 층/실 선택 핸들러
   const openBuildingView = (buildingId, preferredFloor, preferredRoomId) => {
+    if (buildingId === 'external') {
+      setSelectedBuildingId('external');
+      setSelectedFloor('교외');
+      const targetExternalId =
+        preferredRoomId &&
+        externalPlaceGroups.some((g) => g.id === preferredRoomId)
+          ? preferredRoomId
+          : externalPlaceGroups[0]?.id || 'external_empty';
+      setSelectedRoomId(targetExternalId);
+      setViewMode('building');
+      return;
+    }
+
     const b = BUILDINGS[buildingId];
     if (!b) return;
     const floorKeys = Object.keys(b.floors);
@@ -1125,6 +1278,7 @@ export default function App() {
   };
 
   const handleSelectFloor = (floorKey) => {
+    if (selectedBuildingId === 'external') return;
     setSelectedFloor(floorKey);
     const floorObj = BUILDINGS[selectedBuildingId].floors[floorKey];
     const allRooms = [...floorObj.topRooms, ...floorObj.bottomRooms];
@@ -1161,16 +1315,43 @@ export default function App() {
   };
 
   const externalRecords = activitiesByRoom.external || [];
-  const currentBuilding = BUILDINGS[selectedBuildingId];
-  const currentFloorObj = currentBuilding.floors[selectedFloor];
-  const selectedRoomMeta = ROOM_BY_ID[selectedRoomId] || {
-    id: selectedRoomId,
-    buildingName: '성실관',
-    floor: '1F',
-    name: '코딩실',
-    sub: '구 멀티실',
-  };
-  const selectedRoomRecords = activitiesByRoom[selectedRoomId] || [];
+  const isExternalBuilding = selectedBuildingId === 'external';
+  const currentBuilding = isExternalBuilding
+    ? null
+    : BUILDINGS[selectedBuildingId] || BUILDINGS.seongsil;
+  const currentFloorObj = isExternalBuilding
+    ? null
+    : currentBuilding.floors[selectedFloor] ||
+      Object.values(currentBuilding.floors)[0];
+
+  const selectedExternalGroup = useMemo(() => {
+    if (!isExternalBuilding) return null;
+    return (
+      externalPlaceGroups.find((g) => g.id === selectedRoomId) ||
+      externalPlaceGroups[0] ||
+      null
+    );
+  }, [isExternalBuilding, externalPlaceGroups, selectedRoomId]);
+
+  const selectedRoomMeta = isExternalBuilding
+    ? {
+        id: selectedExternalGroup?.id || 'external_empty',
+        buildingName: '외부 (교외·외부 장소)',
+        floor: '교외',
+        name: selectedExternalGroup?.name || '교외 활동 장소',
+        sub: '대학·연구소·교회·지역시설 등',
+      }
+    : ROOM_BY_ID[selectedRoomId] || {
+        id: selectedRoomId,
+        buildingName: '성실관',
+        floor: '1F',
+        name: '코딩실',
+        sub: '구 멀티실',
+      };
+
+  const selectedRoomRecords = isExternalBuilding
+    ? selectedExternalGroup?.records || []
+    : activitiesByRoom[selectedRoomId] || [];
 
   // 층별 평면도 내 개별 실 카드 렌더링
   const renderRoomCard = (room) => {
@@ -1511,15 +1692,17 @@ export default function App() {
             </p>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              {externalRecords.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setIsExternalModalOpen(true)}
-                  className="px-3 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-[#f8fafc] hover:bg-[#f1f5f9] text-[13px] font-medium text-[#334155] shrink-0"
-                >
-                  교외·기타 장소 ({externalRecords.length}건)
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => openBuildingView('external')}
+                className={`px-3 py-1.5 rounded-[4px] border text-[13px] font-bold transition-colors shrink-0 ${
+                  externalRecords.length > 0
+                    ? 'border-[#818cf8] bg-[#eef2ff] hover:bg-[#e0e7ff] text-[#3730a3]'
+                    : 'border-[#bdbdbd] bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#334155]'
+                }`}
+              >
+                외부 (교외·외부 장소) ({externalRecords.length}건)
+              </button>
 
               <div className="relative flex-1 sm:w-[290px]">
                 <input
@@ -1561,7 +1744,11 @@ export default function App() {
                         if (meta && meta.buildingId !== 'external') {
                           openBuildingView(meta.buildingId, meta.floor, meta.id);
                         } else {
-                          setIsExternalModalOpen(true);
+                          openBuildingView(
+                            'external',
+                            '교외',
+                            getExternalPlaceKey(rec.rawLocation)
+                          );
                         }
                       }}
                       className="text-left px-3 py-1.5 rounded-[4px] border border-[#8bc7c0] bg-[#eef8f7] hover:bg-[#dff1ef] text-[13px]"
@@ -1585,16 +1772,21 @@ export default function App() {
           <div className="mt-[20px] bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-5 sm:p-6">
             <div className="w-full overflow-hidden rounded-[4px] border border-[#cccccc] bg-[#e9f4f2]">
               <svg
-                viewBox="0 0 1120 390"
+                viewBox="0 0 1360 390"
                 className="w-full h-auto block select-none"
                 role="img"
-                aria-label="전남과학고등학교 전경 지도"
+                aria-label="전남과학고등학교 전경 및 교외 외부 지도"
               >
                 <defs>
                   <linearGradient id="jshsSky" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#e3f1ef" />
                     <stop offset="68%" stopColor="#f3f9f8" />
                     <stop offset="100%" stopColor="#e8f3ea" />
+                  </linearGradient>
+                  <linearGradient id="outsideSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#e6eaf4" />
+                    <stop offset="72%" stopColor="#f4f6fb" />
+                    <stop offset="100%" stopColor="#e2e8f0" />
                   </linearGradient>
                   <pattern
                     id="dotGrid"
@@ -1606,8 +1798,12 @@ export default function App() {
                   </pattern>
                 </defs>
 
-                <rect x="0" y="0" width="1120" height="390" fill="url(#jshsSky)" />
-                <rect x="0" y="0" width="1120" height="320" fill="url(#dotGrid)" />
+                {/* 교내 배경 (0 ~ 1096) */}
+                <rect x="0" y="0" width="1096" height="390" fill="url(#jshsSky)" />
+                <rect x="0" y="0" width="1096" height="320" fill="url(#dotGrid)" />
+
+                {/* 교외 외부 배경 (1096 ~ 1360) */}
+                <rect x="1096" y="0" width="264" height="390" fill="url(#outsideSky)" />
 
                 <g fill="#ffffff" opacity="0.9">
                   <circle cx="155" cy="52" r="16" />
@@ -1616,9 +1812,13 @@ export default function App() {
                   <circle cx="950" cy="46" r="15" />
                   <circle cx="972" cy="42" r="21" />
                   <circle cx="994" cy="48" r="16" />
+                  <circle cx="1265" cy="44" r="14" />
+                  <circle cx="1285" cy="40" r="18" />
+                  <circle cx="1305" cy="45" r="13" />
                 </g>
 
-                <rect x="0" y="314" width="1120" height="76" fill="#dfece0" />
+                {/* 교내 운동장 & 잔디 (0 ~ 1096) */}
+                <rect x="0" y="314" width="1096" height="76" fill="#dfece0" />
                 <polygon points="75,326 1055,326 1085,376 45,376" fill="#5ea343" />
                 <polygon
                   points="75,326 1055,326 1085,376 45,376"
@@ -1650,7 +1850,7 @@ export default function App() {
                   <polyline points="984,358 984,334 1012,334 1012,358" />
                 </g>
 
-                {[52, 466, 815, 1076].map((tx, i) => (
+                {[52, 466, 815, 1072].map((tx, i) => (
                   <g key={`tree-${i}`}>
                     <rect x={tx - 3} y="302" width="6" height="18" fill="#6b4423" />
                     <circle cx={tx} cy="292" r="16" fill="#3d8b37" />
@@ -2037,6 +2237,283 @@ export default function App() {
                     {BUILDINGS.seongchui.mapLabel}
                   </text>
                 </g>
+
+                {/* ==========================================================
+                    [학교 경계 담장 및 교문] 교내와 외부(교외) 공간 구분선
+                   ========================================================== */}
+                <g>
+                  <line
+                    x1="1096"
+                    y1="24"
+                    x2="1096"
+                    y2="382"
+                    stroke="#94a3b8"
+                    strokeWidth="2"
+                    strokeDasharray="6 5"
+                  />
+                  {/* 벽돌 교문 기둥 */}
+                  <rect
+                    x="1089"
+                    y="238"
+                    width="14"
+                    height="78"
+                    rx="2"
+                    fill="#7c3028"
+                    stroke="#4a1c17"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x="1087"
+                    y="233"
+                    width="18"
+                    height="7"
+                    rx="1.5"
+                    fill="#e8e2d5"
+                    stroke="#5e211b"
+                    strokeWidth="1"
+                  />
+                  {/* 교문 안내 푯말 */}
+                  <rect
+                    x="1077"
+                    y="204"
+                    width="38"
+                    height="22"
+                    rx="4"
+                    fill="#ffffff"
+                    stroke="#64748b"
+                    strokeWidth="1.2"
+                  />
+                  <text
+                    x="1096"
+                    y="219"
+                    textAnchor="middle"
+                    fontSize="10.5"
+                    fontWeight="700"
+                    fill="#334155"
+                  >
+                    교문
+                  </text>
+                </g>
+
+                {/* ==========================================================
+                    [교문 바깥 우측 구역] 외부 (교외·외부 장소) 일러스트
+                   ========================================================== */}
+                <g
+                  onClick={() => openBuildingView('external')}
+                  className="cursor-pointer group"
+                >
+                  {/* 교외 인도 및 아스팔트 도로 */}
+                  <rect x="1096" y="314" width="264" height="14" fill="#cbd5e1" />
+                  <rect x="1096" y="328" width="264" height="62" fill="#64748b" />
+                  <line
+                    x1="1104"
+                    y1="358"
+                    x2="1354"
+                    y2="358"
+                    stroke="#f8fafc"
+                    strokeWidth="2"
+                    strokeDasharray="12 10"
+                    opacity="0.85"
+                  />
+
+                  {/* 외부 건물 1: 대학 · 연구기관 (모던 유리·콘크리트 연구동) */}
+                  <rect
+                    x="1116"
+                    y="162"
+                    width="96"
+                    height="152"
+                    rx="2"
+                    fill="#475569"
+                    stroke="#334155"
+                    strokeWidth="1.8"
+                  />
+                  <rect
+                    x="1123"
+                    y="150"
+                    width="82"
+                    height="12"
+                    rx="1.5"
+                    fill="#334155"
+                  />
+                  {[174, 206, 238, 270].map((wy, rIdx) => (
+                    <g key={`ext-uni-w-${rIdx}`}>
+                      {[1126, 1154, 1182].map((wx, cIdx) => (
+                        <rect
+                          key={`ext-uni-c-${rIdx}-${cIdx}`}
+                          x={wx}
+                          y={wy}
+                          width="20"
+                          height="22"
+                          rx="1"
+                          fill="#bae6fd"
+                          stroke="#1e293b"
+                          strokeWidth="1"
+                        />
+                      ))}
+                    </g>
+                  ))}
+                  <rect
+                    x="1132"
+                    y="166"
+                    width="64"
+                    height="15"
+                    rx="3"
+                    fill="#1e293b"
+                    opacity="0.92"
+                  />
+                  <text
+                    x="1164"
+                    y="177"
+                    textAnchor="middle"
+                    fontSize="9.5"
+                    fontWeight="700"
+                    fill="#f8fafc"
+                  >
+                    대학 · 연구소
+                  </text>
+
+                  {/* 외부 건물 2: 교회 · 지역시설 (박공지붕 + 종탑/십자가) */}
+                  {/* 종탑 & 첨탑 */}
+                  <rect
+                    x="1273"
+                    y="146"
+                    width="22"
+                    height="46"
+                    fill="#f8fafc"
+                    stroke="#64748b"
+                    strokeWidth="1.5"
+                  />
+                  <polygon
+                    points="1269,146 1284,122 1299,146"
+                    fill="#b91c1c"
+                    stroke="#7f1d1d"
+                    strokeWidth="1.5"
+                  />
+                  {/* 십자가 심볼 */}
+                  <line
+                    x1="1284"
+                    y1="106"
+                    x2="1284"
+                    y2="122"
+                    stroke="#b91c1c"
+                    strokeWidth="2.5"
+                  />
+                  <line
+                    x1="1278"
+                    y1="112"
+                    x2="1290"
+                    y2="112"
+                    stroke="#b91c1c"
+                    strokeWidth="2.5"
+                  />
+                  {/* 본당 지붕 및 외벽 */}
+                  <polygon
+                    points="1222,202 1284,166 1346,202"
+                    fill="#991b1b"
+                    stroke="#7f1d1d"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x="1228"
+                    y="202"
+                    width="112"
+                    height="112"
+                    fill="#fffbeb"
+                    stroke="#94a3b8"
+                    strokeWidth="1.8"
+                  />
+                  {/* 아치형 창문 & 출입문 */}
+                  <rect
+                    x="1244"
+                    y="222"
+                    width="20"
+                    height="36"
+                    rx="10"
+                    fill="#93c5fd"
+                    stroke="#475569"
+                    strokeWidth="1.2"
+                  />
+                  <rect
+                    x="1304"
+                    y="222"
+                    width="20"
+                    height="36"
+                    rx="10"
+                    fill="#93c5fd"
+                    stroke="#475569"
+                    strokeWidth="1.2"
+                  />
+                  <rect
+                    x="1272"
+                    y="268"
+                    width="24"
+                    height="46"
+                    rx="12"
+                    fill="#78350f"
+                  />
+                  <rect
+                    x="1250"
+                    y="194"
+                    width="68"
+                    height="15"
+                    rx="3"
+                    fill="#7f1d1d"
+                  />
+                  <text
+                    x="1284"
+                    y="205"
+                    textAnchor="middle"
+                    fontSize="9.5"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    교회 · 지역시설
+                  </text>
+
+                  {/* 가로수 */}
+                  <rect x="1217" y="298" width="5" height="16" fill="#6b4423" />
+                  <circle cx="1219.5" cy="290" r="12" fill="#4da346" />
+
+                  {/* 외부 상태 배지 */}
+                  <rect
+                    x="1132"
+                    y="66"
+                    width="196"
+                    height="32"
+                    rx="16"
+                    fill={buildingBadges.external.pillColor}
+                  />
+                  <text
+                    x="1230"
+                    y="87"
+                    textAnchor="middle"
+                    fontSize="14"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {buildingBadges.external.statusText}
+                  </text>
+
+                  {/* 외부 하단 라벨 배지 */}
+                  <rect
+                    x="1126"
+                    y="330"
+                    width="208"
+                    height="32"
+                    rx="16"
+                    fill="#1f2937"
+                  />
+                  <text
+                    x="1230"
+                    y="351"
+                    textAnchor="middle"
+                    fontSize="14.5"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    외부 (교외·외부 장소)
+                  </text>
+                </g>
               </svg>
             </div>
           </div>
@@ -2087,89 +2564,177 @@ export default function App() {
                     </button>
                   );
                 })}
+
+                <button
+                  type="button"
+                  onClick={() => openBuildingView('external')}
+                  className={`px-3.5 py-1.5 rounded-[4px] text-[14px] font-bold border transition-colors flex items-center gap-1.5 ${
+                    isExternalBuilding
+                      ? 'bg-[#eef2ff] border-[#818cf8] text-[#1e1b4b]'
+                      : 'bg-[#f3f4f6] border-transparent text-[#374151] hover:bg-[#e5e7eb]'
+                  }`}
+                >
+                  <span>외부 (교외·외부 장소)</span>
+                  {buildingStats.external.teams > 0 && (
+                    <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-[#6366f1] text-white">
+                      {buildingStats.external.teams}
+                    </span>
+                  )}
+                </button>
               </div>
 
               <div className="flex items-center gap-1.5">
-                {Object.keys(currentBuilding.floors).map((floorKey) => {
-                  const fStat = floorStats[selectedBuildingId]?.[floorKey] || {
-                    hasTeams: false,
-                    hasConflict: false,
-                  };
+                {isExternalBuilding ? (
+                  <span className="px-3 py-1.5 rounded-[4px] text-[13px] font-bold bg-[#111111] text-white">
+                    교외 전체 ({externalRecords.length}팀)
+                  </span>
+                ) : (
+                  Object.keys(currentBuilding.floors).map((floorKey) => {
+                    const fStat = floorStats[selectedBuildingId]?.[floorKey] || {
+                      hasTeams: false,
+                      hasConflict: false,
+                    };
 
-                  return (
-                    <button
-                      key={floorKey}
-                      type="button"
-                      onClick={() => handleSelectFloor(floorKey)}
-                      className={`px-3 py-1.5 rounded-[4px] text-[13px] font-bold border transition-colors flex items-center gap-1.5 ${
-                        selectedFloor === floorKey
-                          ? 'bg-[#111111] text-white border-[#111111]'
-                          : 'bg-white text-[#374151] border-[#bdbdbd] hover:bg-[#f3f4f6]'
-                      }`}
-                    >
-                      <span>{floorKey}</span>
-                      {fStat.hasTeams && (
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            fStat.hasConflict ? 'bg-[#d9823b]' : 'bg-[#8bc7c0]'
-                          }`}
-                        />
-                      )}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={floorKey}
+                        type="button"
+                        onClick={() => handleSelectFloor(floorKey)}
+                        className={`px-3 py-1.5 rounded-[4px] text-[13px] font-bold border transition-colors flex items-center gap-1.5 ${
+                          selectedFloor === floorKey
+                            ? 'bg-[#111111] text-white border-[#111111]'
+                            : 'bg-white text-[#374151] border-[#bdbdbd] hover:bg-[#f3f4f6]'
+                        }`}
+                      >
+                        <span>{floorKey}</span>
+                        {fStat.hasTeams && (
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              fStat.hasConflict ? 'bg-[#d9823b]' : 'bg-[#8bc7c0]'
+                            }`}
+                          />
+                        )}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-              {/* 좌측: 2단 블록 그리드 평면도 */}
+              {/* 좌측: 2단 블록 그리드 평면도 (또는 외부 장소 카드 목록) */}
               <div className="lg:col-span-8 bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-5">
                 <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#e5e7eb]">
                   <h2 className="text-[18px] font-bold text-[#111111]">
-                    {currentBuilding.fullName} · {currentFloorObj.label} 평면도
+                    {isExternalBuilding
+                      ? '외부 (교외·외부 장소) 활동 구역'
+                      : `${currentBuilding.fullName} · ${currentFloorObj.label} 평면도`}
                   </h2>
                   <span className="text-[12.5px] text-[#6b7280]">
-                    실 카드를 클릭하면 우측에서 신청 상세 표를 볼 수 있습니다.
+                    {isExternalBuilding
+                      ? '교내 건물이 아닌 R&E·교회·기관 등 외부 활동 장소가 자동 분류됩니다.'
+                      : '실 카드를 클릭하면 우측에서 신청 상세 표를 볼 수 있습니다.'}
                   </span>
                 </div>
 
-                <div className="border border-[#d1d5db] rounded-[5px] bg-[#fafafa] p-4 space-y-3.5">
-                  {currentFloorObj.topRooms.length > 0 && (
-                    <div
-                      className={`grid gap-3 ${
-                        currentFloorObj.topRooms.length === 1
-                          ? 'grid-cols-1'
-                          : currentFloorObj.topRooms.length === 2
-                          ? 'grid-cols-1 sm:grid-cols-2'
-                          : currentFloorObj.topRooms.length === 3
-                          ? 'grid-cols-1 sm:grid-cols-3'
-                          : 'grid-cols-2 sm:grid-cols-4'
-                      }`}
-                    >
-                      {currentFloorObj.topRooms.map(renderRoomCard)}
+                {isExternalBuilding ? (
+                  <div className="border border-[#d1d5db] rounded-[5px] bg-[#fafafa] p-4 space-y-3.5">
+                    <div className="py-2.5 px-4 rounded-[4px] bg-[#e0e7ff] text-center text-[13px] font-bold text-[#3730a3] tracking-tight">
+                      ◀ 전남과학고 교문 바깥 · 대학·연구소·교회·지역시설 외부 구역 ▶
                     </div>
-                  )}
 
-                  <div className="py-2.5 px-4 rounded-[4px] bg-[#e5e7eb] text-center text-[13px] font-bold text-[#374151] tracking-tight">
-                    {currentFloorObj.corridor}
+                    {externalPlaceGroups.length === 0 ? (
+                      <div className="py-14 text-center bg-white border border-dashed border-[#cbd5e1] rounded-[6px]">
+                        <div className="text-[15px] font-bold text-[#4b5563]">
+                          현재 등록된 외부(교외) 탐활 내역이 없습니다.
+                        </div>
+                        <div className="text-[13px] text-[#6b7280] mt-1">
+                          탐활서 목록을 붙여넣을 때 대학, 교회, 연구소 등 학교 밖 장소는 이곳으로 자동 분류됩니다.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {externalPlaceGroups.map((group) => {
+                          const teamCount = group.records.length;
+                          const isSelected =
+                            selectedExternalGroup?.id === group.id;
+                          return (
+                            <button
+                              key={group.id}
+                              type="button"
+                              onClick={() => setSelectedRoomId(group.id)}
+                              className={`w-full text-left min-h-[122px] p-4 rounded-[6px] border transition-all flex flex-col justify-between bg-[#eef2ff] border-[#818cf8] text-[#1e1b4b] hover:bg-[#e0e7ff] ${
+                                isSelected
+                                  ? 'ring-2 ring-[#111111] shadow-xs'
+                                  : ''
+                              }`}
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[16px] font-bold leading-snug tracking-tight break-keep">
+                                    {group.name}
+                                  </span>
+                                  <span className="inline-block text-[12px] font-bold px-2.5 py-0.5 rounded-[4px] bg-[#c7d2fe] text-[#3730a3] shrink-0">
+                                    {teamCount}팀
+                                  </span>
+                                </div>
+                                <div className="text-[13px] text-[#4338ca] mt-1 leading-tight">
+                                  {group.sub}
+                                </div>
+                              </div>
+
+                              <div className="mt-3.5 pt-2.5 border-t border-black/5 text-[13.5px]">
+                                <div className="truncate font-medium text-[#1e1b4b]">
+                                  {group.records[0].leader} (
+                                  {countUniqueStudents(group.records[0])}명) ·{' '}
+                                  {group.records[0].topic}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
+                ) : (
+                  <div className="border border-[#d1d5db] rounded-[5px] bg-[#fafafa] p-4 space-y-3.5">
+                    {currentFloorObj.topRooms.length > 0 && (
+                      <div
+                        className={`grid gap-3 ${
+                          currentFloorObj.topRooms.length === 1
+                            ? 'grid-cols-1'
+                            : currentFloorObj.topRooms.length === 2
+                            ? 'grid-cols-1 sm:grid-cols-2'
+                            : currentFloorObj.topRooms.length === 3
+                            ? 'grid-cols-1 sm:grid-cols-3'
+                            : 'grid-cols-2 sm:grid-cols-4'
+                        }`}
+                      >
+                        {currentFloorObj.topRooms.map(renderRoomCard)}
+                      </div>
+                    )}
 
-                  {currentFloorObj.bottomRooms.length > 0 && (
-                    <div
-                      className={`grid gap-3 ${
-                        currentFloorObj.bottomRooms.length === 1
-                          ? 'grid-cols-1'
-                          : currentFloorObj.bottomRooms.length === 2
-                          ? 'grid-cols-1 sm:grid-cols-2'
-                          : currentFloorObj.bottomRooms.length === 3
-                          ? 'grid-cols-1 sm:grid-cols-3'
-                          : 'grid-cols-2 sm:grid-cols-4'
-                      }`}
-                    >
-                      {currentFloorObj.bottomRooms.map(renderRoomCard)}
+                    <div className="py-2.5 px-4 rounded-[4px] bg-[#e5e7eb] text-center text-[13px] font-bold text-[#374151] tracking-tight">
+                      {currentFloorObj.corridor}
                     </div>
-                  )}
-                </div>
+
+                    {currentFloorObj.bottomRooms.length > 0 && (
+                      <div
+                        className={`grid gap-3 ${
+                          currentFloorObj.bottomRooms.length === 1
+                            ? 'grid-cols-1'
+                            : currentFloorObj.bottomRooms.length === 2
+                            ? 'grid-cols-1 sm:grid-cols-2'
+                            : currentFloorObj.bottomRooms.length === 3
+                            ? 'grid-cols-1 sm:grid-cols-3'
+                            : 'grid-cols-2 sm:grid-cols-4'
+                        }`}
+                      >
+                        {currentFloorObj.bottomRooms.map(renderRoomCard)}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* 우측: 선택한 실 상세 정보 (실제 과구리 2열 표 스타일) */}
@@ -2378,9 +2943,17 @@ export default function App() {
                               <td className="py-1.5 px-2.5">
                                 <span className="text-[#6b7280]">{item.rawLocation}</span>
                                 <span className="mx-1">→</span>
-                                <strong className="text-[#2f6861]">
-                                  {meta ? `${meta.buildingName} ${meta.floor} ${meta.name}` : '교외'}
-                                </strong>
+                                {item.roomId === 'external' ? (
+                                  <span className="inline-block px-1.5 py-0.5 rounded bg-[#eef2ff] text-[#3730a3] font-bold">
+                                    외부 (교외·외부 장소)
+                                  </span>
+                                ) : (
+                                  <strong className="text-[#2f6861]">
+                                    {meta
+                                      ? `${meta.buildingName} ${meta.floor} ${meta.name}`
+                                      : '외부'}
+                                  </strong>
+                                )}
                               </td>
                               <td className="py-1.5 px-2.5 whitespace-nowrap font-bold">
                                 {item.leader}

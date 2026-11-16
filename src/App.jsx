@@ -1133,7 +1133,7 @@ export default function App() {
     const isSelected = selectedRoomId === room.id;
 
     let cardColorClass =
-      'bg-white border-[#d1d5db] text-[#111827] hover:border-[#7ea69b]';
+      'bg-white border-[#d1d5db] text-[#111827] hover:border-[#8bc7c0]';
     let statusBadge = (
       <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-[3px] bg-[#f3f4f6] text-[#6b7280]">
         비어 있음
@@ -1142,15 +1142,15 @@ export default function App() {
 
     if (teamCount === 1) {
       cardColorClass =
-        'bg-[#eef5f3] border-[#7ea69b] text-[#13382e] hover:bg-[#e3efec]';
+        'bg-[#f2f9f8] border-[#8bc7c0] text-[#1a3c38] hover:bg-[#e6f3f1]';
       statusBadge = (
-        <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-[3px] bg-[#7ea69b] text-white">
+        <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-[3px] bg-[#e0f1ef] text-[#3d7871]">
           1팀
         </span>
       );
     } else if (teamCount >= 2) {
       cardColorClass =
-        'bg-[#fff5ed] border-[#d97736] text-[#7c2d12] hover:bg-[#ffeadb]';
+        'bg-[#fdf8f3] border-[#d97736] text-[#7c2d12] hover:bg-[#faefe3]';
       statusBadge = (
         <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-[3px] bg-[#d97736] text-white">
           {teamCount}팀 중복
@@ -1199,34 +1199,58 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen bg-[#f3f4f6] text-[#222222]"
+      className="min-h-screen bg-[#f5f5f5] text-[#222222]"
       style={{
-        fontFamily:
-          "'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif",
+        fontFamily: "'Noto Sans KR', 'Malgun Gothic', sans-serif",
       }}
     >
-      {/* 1. 공식 과구리 상단 민트 헤더 (64px) */}
-      <header className="bg-[#7ea69b] text-white h-[64px] border-b border-[#6d9489]">
+      {/* 1. 공식 과구리 상단 민트 헤더 (#8bc7c0, 62px) */}
+      <header className="bg-[#8bc7c0] text-white h-[62px] border-b border-[#7bb7b0]">
         <div className="max-w-[1280px] mx-auto px-4 h-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 overflow-hidden">
-            {/* 2x2 흰색/반투명 그리드 로고 아이콘 */}
+            {/* 공식 과구리 겹침 사각형 로고 아이콘 (36px x 36px) */}
             <button
               type="button"
               onClick={() => setViewMode('campus')}
-              className="flex items-center gap-2.5 text-left focus:outline-none group"
+              className="flex items-center gap-2.5 text-left focus:outline-none group shrink-0"
             >
-              <span className="grid grid-cols-2 gap-1 w-6 h-6 p-0.5 shrink-0">
-                <span className="bg-white rounded-[1px]" />
-                <span className="bg-white/65 rounded-[1px]" />
-                <span className="bg-white/65 rounded-[1px]" />
-                <span className="bg-white rounded-[1px]" />
-              </span>
-              <span className="text-[26px] font-bold tracking-tight leading-none text-white">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 36 36"
+                className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]"
+                aria-hidden="true"
+              >
+                <defs>
+                  <clipPath id="gwaguriLogoClip">
+                    <rect x="0" y="0" width="36" height="36" rx="3" />
+                  </clipPath>
+                </defs>
+                <g clipPath="url(#gwaguriLogoClip)">
+                  {/* 좌상단 민트-그레이 정사각형 */}
+                  <rect x="0" y="0" width="28" height="28" fill="#7ba8a3" />
+                  {/* 우상단 짙은 회색 세로 바 */}
+                  <rect x="28" y="0" width="8" height="28" fill="#424242" />
+                  {/* 좌하단 짙은 회색 가로 바 */}
+                  <rect x="0" y="28" width="28" height="8" fill="#424242" />
+                  {/* 우하단 겹치는 사각형 */}
+                  <rect x="18" y="18" width="18" height="18" fill="#99b5b3" />
+                  {/* 중앙 교차 밝은 민트 영역 */}
+                  <rect x="18" y="18" width="10" height="10" fill="#aad3d0" />
+                  {/* 교차 사각형 상단·좌측 1px 밝은 테두리 */}
+                  <path
+                    d="M 18.5 36 L 18.5 18.5 L 36 18.5"
+                    fill="none"
+                    stroke="#cde4e2"
+                    strokeWidth="1"
+                  />
+                </g>
+              </svg>
+              <span className="text-[26px] font-medium text-white tracking-[-0.03em] leading-none [text-shadow:0_1px_2px_rgba(0,0,0,0.22)]">
                 과구리
               </span>
             </button>
-            <span className="text-white/50 text-lg hidden sm:inline">|</span>
-            <span className="text-white/95 text-[14px] truncate hidden sm:inline">
+            <span className="text-[13.5px] text-white/95 truncate hidden sm:inline ml-1">
               소개 | 학생부 전산시스템 · 공용 탐활 공간 현황
             </span>
           </div>
@@ -1237,7 +1261,7 @@ export default function App() {
               setPasteStatus(null);
               setIsPasteModalOpen(true);
             }}
-            className="border border-white/80 text-white px-4 py-2 rounded-[4px] text-[14px] font-medium hover:bg-white/10 transition-colors whitespace-nowrap shrink-0"
+            className="border border-[#4c7a75] bg-transparent hover:bg-white/15 text-white rounded-[3px] px-3.5 py-1.5 text-[13px] font-medium transition-colors whitespace-nowrap shrink-0"
           >
             탐활서 데이터 붙여넣기
           </button>
@@ -1261,7 +1285,7 @@ export default function App() {
             ].map((item) => (
               <span
                 key={item}
-                className="cursor-pointer hover:text-[#5f8d80] transition-colors whitespace-nowrap"
+                className="cursor-pointer hover:text-[#4d8f87] transition-colors whitespace-nowrap"
               >
                 {item}
               </span>
@@ -1282,8 +1306,8 @@ export default function App() {
                 onClick={() => item.active && setViewMode('campus')}
                 className={`pb-0.5 whitespace-nowrap transition-colors ${
                   item.active
-                    ? 'text-[#5f8d80] font-bold border-b-2 border-[#7ea69b]'
-                    : 'text-[#222222] hover:text-[#5f8d80]'
+                    ? 'text-[#4d8f87] font-bold border-b-2 border-[#8bc7c0]'
+                    : 'text-[#222222] hover:text-[#4d8f87]'
                 }`}
               >
                 {item.label}
@@ -1298,7 +1322,7 @@ export default function App() {
         <div className="bg-white border border-[#d1d5db] rounded-[4px] p-6">
           {/* 자정(00:00) 자동 날짜 전환 안내 (자정 경과 시에만 일시 표시) */}
           {midnightBanner && (
-            <div className="mb-4 px-3.5 py-2 bg-[#eef5f3] border border-[#7ea69b] text-[#284b42] text-[13px] rounded-[4px] flex items-center justify-between">
+            <div className="mb-4 px-3.5 py-2 bg-[#eef7f6] border border-[#8bc7c0] text-[#2e5a55] text-[13px] rounded-[4px] flex items-center justify-between">
               <span>{midnightBanner}</span>
               <button
                 type="button"
@@ -1321,11 +1345,11 @@ export default function App() {
                 비어 있음
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-[2px] bg-[#eef5f3] border border-[#7ea69b] inline-block" />
+                <span className="w-3 h-3 rounded-[2px] bg-[#f2f9f8] border border-[#8bc7c0] inline-block" />
                 1팀 사용 중
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-[2px] bg-[#fff5ed] border border-[#d97736] inline-block" />
+                <span className="w-3 h-3 rounded-[2px] bg-[#fdf8f3] border border-[#d97736] inline-block" />
                 2팀 이상 중복
               </span>
             </div>
@@ -1355,7 +1379,7 @@ export default function App() {
                   setSelectedDate(latest);
                   setIsCalendarOpen(false);
                 }}
-                className="bg-[#eef5f3] text-[#4d7c6f] border border-[#7ea69b] px-2.5 py-1 rounded-[4px] text-[13px] font-bold hover:bg-[#e1efeb] transition-colors"
+                className="bg-[#eef7f6] text-[#437f78] border border-[#8bc7c0] px-2.5 py-1 rounded-[4px] text-[13px] font-bold hover:bg-[#e1f1ef] transition-colors"
               >
                 오늘
               </button>
@@ -1436,9 +1460,9 @@ export default function App() {
                           }}
                           className={`py-1 rounded-[3px] flex flex-col items-center ${
                             isSel
-                              ? 'bg-[#7ea69b] text-white font-bold'
+                              ? 'bg-[#8bc7c0] text-white font-bold'
                               : isTod
-                              ? 'border border-[#7ea69b] text-[#4d7c6f] font-bold'
+                              ? 'border border-[#8bc7c0] text-[#437f78] font-bold'
                               : 'hover:bg-[#f3f4f6] text-[#374151]'
                           }`}
                         >
@@ -1466,7 +1490,7 @@ export default function App() {
                 전체 탐활 <strong className="text-[#111827]">{summaryStats.totalCount}건</strong>
                 <span className="mx-2 text-[#d1d5db]">|</span>
                 사용 중인 실{' '}
-                <strong className="text-[#4d7c6f]">{summaryStats.usedRooms}곳</strong>
+                <strong className="text-[#437f78]">{summaryStats.usedRooms}곳</strong>
                 <span className="mx-2 text-[#d1d5db]">|</span>
                 중복 사용실{' '}
                 <strong
@@ -1491,7 +1515,7 @@ export default function App() {
                     onClick={() => setPeriodFilter(tab.key)}
                     className={`px-3 py-1.5 text-[13px] transition-colors ${
                       periodFilter === tab.key
-                        ? 'bg-[#7ea69b] text-white font-bold'
+                        ? 'bg-[#8bc7c0] text-white font-bold border-[#7ab8b1]'
                         : 'bg-white text-[#374151] hover:bg-[#f9fafb]'
                     }`}
                   >
@@ -1514,7 +1538,7 @@ export default function App() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="학생 이름, 학번, 실 이름 검색..."
-                className="w-72 border border-[#d1d5db] rounded-[4px] px-3 py-1.5 text-[14px] focus:outline-none focus:border-[#7ea69b]"
+                className="w-72 border border-[#d1d5db] rounded-[4px] px-3 py-1.5 text-[14px] focus:outline-none focus:border-[#8bc7c0]"
               />
               {searchQuery && (
                 <button
@@ -1552,7 +1576,7 @@ export default function App() {
                               }
                               setSearchQuery('');
                             }}
-                            className="w-full text-left px-3 py-2.5 hover:bg-[#eef5f3] transition-colors"
+                            className="w-full text-left px-3 py-2.5 hover:bg-[#eef7f6] transition-colors"
                           >
                             <div className="flex items-center justify-between text-[13px] font-bold text-[#111827]">
                               <span>
@@ -1560,7 +1584,7 @@ export default function App() {
                                   ? `${meta.buildingName} ${meta.floor} · ${meta.name}`
                                   : rec.rawLocation}
                               </span>
-                              <span className="text-[12px] text-[#4d7c6f]">{rec.leader}</span>
+                              <span className="text-[12px] text-[#437f78]">{rec.leader}</span>
                             </div>
                             <div className="text-[12px] text-[#4b5563] truncate mt-0.5">
                               {rec.topic}
@@ -1577,7 +1601,7 @@ export default function App() {
 
           {/* 6. 화면 모드 A: 전남과학고등학교 실제 사진 기반 캠퍼스 SVG 지도 */}
           {viewMode === 'campus' ? (
-            <div className="relative w-full overflow-hidden rounded-[4px] border border-[#cbd5e1] bg-[#eef6f4]">
+            <div className="relative w-full overflow-hidden rounded-[4px] border border-[#cbd5e1] bg-[#eef7f6]">
               <svg
                 viewBox="0 0 1120 420"
                 className="w-full h-auto block select-none"
@@ -1586,8 +1610,8 @@ export default function App() {
               >
                 <defs>
                   <linearGradient id="jshsSky" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#e5f1ee" />
-                    <stop offset="100%" stopColor="#f4f9f7" />
+                    <stop offset="0%" stopColor="#e7f4f2" />
+                    <stop offset="100%" stopColor="#f5faf9" />
                   </linearGradient>
                 </defs>
 
@@ -1757,7 +1781,7 @@ export default function App() {
                     const pillColor = isConflict
                       ? '#c87a28'
                       : isUsed
-                      ? '#6b968a'
+                      ? '#6fb5ad'
                       : '#6b7280';
                     const statusText = isConflict
                       ? `중복 사용실 ${st.conflictRooms}곳 · ${st.teams}팀`
@@ -1952,7 +1976,7 @@ export default function App() {
                     const pillColor = isConflict
                       ? '#c87a28'
                       : isUsed
-                      ? '#6b968a'
+                      ? '#6fb5ad'
                       : '#6b7280';
                     const statusText = isConflict
                       ? `중복 사용실 ${st.conflictRooms}곳 · ${st.teams}팀`
@@ -2055,7 +2079,7 @@ export default function App() {
                     const pillColor = isConflict
                       ? '#c87a28'
                       : isUsed
-                      ? '#6b968a'
+                      ? '#6fb5ad'
                       : '#6b7280';
                     const statusText = isConflict
                       ? `중복 사용실 ${st.conflictRooms}곳 · ${st.teams}팀`
@@ -2114,7 +2138,7 @@ export default function App() {
                   onClick={() => setShowExternalModal(true)}
                   className="absolute right-4 bottom-4 bg-[#1f2937]/90 hover:bg-[#111827] text-white text-[13px] font-bold px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 transition-colors"
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#7ea69b]" />
+                  <span className="w-2 h-2 rounded-full bg-[#8bc7c0]" />
                   <span>교외 활동 {externalRecords.length}건</span>
                 </button>
               )}
@@ -2142,10 +2166,10 @@ export default function App() {
                         key={b.id}
                         type="button"
                         onClick={() => openBuildingView(b.id)}
-                        className={`px-3.5 py-1.5 rounded-[4px] text-[14px] font-bold transition-colors flex items-center gap-1.5 ${
+                        className={`px-3.5 py-1.5 rounded-[4px] text-[14px] font-bold border transition-colors flex items-center gap-1.5 ${
                           selectedBuildingId === b.id
-                            ? 'bg-[#7ea69b] text-white'
-                            : 'bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]'
+                            ? 'bg-[#eef7f6] border-[#4d8f87] text-[#222222]'
+                            : 'bg-[#f3f4f6] border-transparent text-[#374151] hover:bg-[#e5e7eb]'
                         }`}
                       >
                         <span>{b.fullName}</span>
@@ -2153,10 +2177,10 @@ export default function App() {
                           <span
                             className={`text-[11px] px-1.5 py-0.2 rounded-full ${
                               selectedBuildingId === b.id
-                                ? 'bg-white text-[#2f5e51]'
+                                ? 'bg-[#4d8f87] text-white'
                                 : st.conflictRooms > 0
                                 ? 'bg-[#d97736] text-white'
-                                : 'bg-[#7ea69b] text-white'
+                                : 'bg-[#8bc7c0] text-white'
                             }`}
                           >
                             {st.teams}
@@ -2194,7 +2218,7 @@ export default function App() {
                         {hasTeams && (
                           <span
                             className={`w-2 h-2 rounded-full ${
-                              hasConflict ? 'bg-[#d97736]' : 'bg-[#7ea69b]'
+                              hasConflict ? 'bg-[#d97736]' : 'bg-[#8bc7c0]'
                             }`}
                           />
                         )}
@@ -2275,7 +2299,7 @@ export default function App() {
                         비어 있음
                       </span>
                     ) : selectedRoomRecords.length === 1 ? (
-                      <span className="text-[12px] font-bold px-2.5 py-1 rounded-[3px] bg-[#7ea69b] text-white">
+                      <span className="text-[12px] font-bold px-2.5 py-1 rounded-[3px] bg-[#e0f1ef] text-[#3d7871]">
                         1팀 사용 중
                       </span>
                     ) : (
@@ -2382,7 +2406,7 @@ export default function App() {
       {showExternalModal && (
         <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
           <div className="bg-white border border-[#d1d5db] rounded-[4px] shadow-xl max-w-[540px] w-full overflow-hidden">
-            <div className="bg-[#7ea69b] text-white px-4 py-3 flex items-center justify-between">
+            <div className="bg-[#8bc7c0] text-white px-4 py-3 flex items-center justify-between">
               <h3 className="text-[15px] font-bold">
                 교외 활동 내역 ({formatKoreanDate(selectedDate)})
               </h3>
@@ -2472,7 +2496,7 @@ export default function App() {
       {isPasteModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
           <div className="bg-white border border-[#d1d5db] rounded-[4px] shadow-xl max-w-[680px] w-full overflow-hidden">
-            <div className="bg-[#7ea69b] text-white px-4 py-3 flex items-center justify-between">
+            <div className="bg-[#8bc7c0] text-white px-4 py-3 flex items-center justify-between">
               <h3 className="text-[15px] font-bold">탐활서 데이터 붙여넣기</h3>
               <button
                 type="button"
@@ -2493,13 +2517,13 @@ export default function App() {
                 value={pasteInput}
                 onChange={(e) => setPasteInput(e.target.value)}
                 placeholder={`예시:\n활동날짜\t11월 16일\n활동시간\t19:10 ~ 20:20, 20:30 ~ 21:30\n활동장소\t코딩실\n활동내용\t소프트웨어 경시대회 준비\n대표학생\t1117 조영우\n참가학생\t1114 이예지, 1310 서준혁\n지도교사\t진정숙`}
-                className="w-full border border-[#d1d5db] rounded-[4px] p-2.5 text-[13px] font-mono focus:outline-none focus:border-[#7ea69b]"
+                className="w-full border border-[#d1d5db] rounded-[4px] p-2.5 text-[13px] font-mono focus:outline-none focus:border-[#8bc7c0]"
               />
 
               {/* 실시간 파싱 미리보기 표 */}
               {liveParsedPreview.length > 0 && (
                 <div className="border border-[#d1d5db] rounded-[4px] overflow-hidden">
-                  <div className="bg-[#eef5f3] px-3 py-1.5 text-[12px] font-bold text-[#2f5e51] border-b border-[#d1d5db]">
+                  <div className="bg-[#eef7f6] px-3 py-1.5 text-[12px] font-bold text-[#3d7871] border-b border-[#d1d5db]">
                     자동 인식 미리보기 ({liveParsedPreview.length}건)
                   </div>
                   <div className="max-h-36 overflow-y-auto">
@@ -2518,7 +2542,7 @@ export default function App() {
                           return (
                             <tr key={item.id}>
                               <td className="px-2.5 py-1.5 whitespace-nowrap">{item.date}</td>
-                              <td className="px-2.5 py-1.5 whitespace-nowrap font-semibold text-[#4d7c6f]">
+                              <td className="px-2.5 py-1.5 whitespace-nowrap font-semibold text-[#437f78]">
                                 {meta ? `${meta.buildingName} ${meta.name}` : item.rawLocation}
                               </td>
                               <td className="px-2.5 py-1.5 whitespace-nowrap">{item.leader}</td>
@@ -2537,7 +2561,7 @@ export default function App() {
                   className={`px-3 py-2 rounded-[4px] border text-[13px] ${
                     pasteStatus.type === 'error'
                       ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]'
-                      : 'bg-[#eef5f3] border-[#b7d4cc] text-[#264b41]'
+                      : 'bg-[#eef7f6] border-[#8bc7c0] text-[#2e5a55]'
                   }`}
                 >
                   {pasteStatus.message}
@@ -2563,7 +2587,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleConfirmPaste}
-                    className="px-4 py-1.5 rounded-[4px] bg-[#7ea69b] hover:bg-[#6d9489] text-white font-bold"
+                    className="px-4 py-1.5 rounded-[4px] bg-[#8bc7c0] hover:bg-[#7ab8b1] text-white font-bold"
                   >
                     지도에 반영하기
                   </button>

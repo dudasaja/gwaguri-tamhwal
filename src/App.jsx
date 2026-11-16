@@ -97,21 +97,6 @@ const CalendarIcon = ({ className }) => (
   </Icon>
 );
 
-const UserCheckIcon = ({ className }) => (
-  <Icon className={className}>
-    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="8.5" cy="7" r="4" />
-    <polyline points="17 11 19 13 23 9" />
-  </Icon>
-);
-
-const GraduationCapIcon = ({ className }) => (
-  <Icon className={className}>
-    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-  </Icon>
-);
-
 const ExternalLinkIcon = ({ className }) => (
   <Icon className={className}>
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
@@ -151,19 +136,11 @@ const ChevronDownIcon = ({ className }) => (
   </Icon>
 );
 
-const AlertTriangleIcon = ({ className }) => (
-  <Icon className={className}>
-    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </Icon>
-);
-
 /**
  * ============================================================================
  * 1. 전남과학고등학교 3개 건물 · 2단 블록 그리드 층별 평면도 데이터 정의
- *    - 모든 층이 '상단 구역 / 중앙 복도 / 하단 구역'의 3~4열 블록 배치로
- *      글씨 세로 줄바꿈이나 카드 겹침이 발생하지 않도록 구성
+ *    - 각 층을 '상단 구역 · 중앙 복도 · 하단 구역'의 3~4열 블록 그리드로 배치해
+ *      실 이름과 참여 팀 요약이 세로 줄바꿈 없이 가로로 깔끔하게 표시됨
  * ============================================================================
  */
 const BUILDINGS = [
@@ -176,29 +153,31 @@ const BUILDINGS = [
       {
         id: '1F',
         label: '1층',
-        subject: '행정실 · AI실 · 정보실 · 코딩실',
-        topLabel: '상단 행정 · 교직원 구역',
-        topCols: 4,
+        subject: 'AI실 · 정보실 · 코딩실 · 행정구역',
+        topLabel: '상단 정보 · AI · 코딩 구역',
+        topCols: 3,
         topRooms: [
+          { id: 'ss-1-ai', name: 'AI실', type: 'primary' },
+          { id: 'ss-1-info', name: '정보실', type: 'primary' },
+          { id: 'ss-1-clab', name: '코딩실', subtitle: '구 멀티실', type: 'primary' }
+        ],
+        corridorLabel: '1층 복도 (서측 계단 ↔ 중앙현관 ↔ 동측 계단)',
+        bottomLabel: '하단 행정 · 교직원 · 생활 구역',
+        bottomCols: 4,
+        bottomRooms: [
           { id: 'ss-1-health', name: '보건실', type: 'facility' },
           { id: 'ss-1-council', name: '교직원협의실', type: 'facility' },
           { id: 'ss-1-prin', name: '교장실', type: 'facility' },
-          { id: 'ss-1-office', name: '행정실', type: 'facility' }
-        ],
-        corridorLabel: '1층 복도 (서측 계단 ↔ 중앙현관 ↔ 동측 계단)',
-        bottomLabel: '하단 정보 · 코딩 · 생활 구역',
-        bottomCols: 4,
-        bottomRooms: [
-          { id: 'ss-1-ai', name: 'AI실', type: 'primary' },
-          { id: 'ss-1-info', name: '정보실', type: 'primary' },
-          { id: 'ss-1-clab', name: '코딩실', subtitle: '구 멀티실', type: 'primary' },
-          { id: 'ss-1-cafeteria', name: '급식실 · 중앙현관', type: 'facility' }
+          { id: 'ss-1-office', name: '행정실', type: 'facility' },
+          { id: 'ss-1-lobby', name: '중앙현관', type: 'facility' },
+          { id: 'ss-1-print', name: '발간실', type: 'facility' },
+          { id: 'ss-1-cafeteria', name: '급식실', type: 'facility' }
         ]
       },
       {
         id: '2F',
         label: '2층',
-        subject: '1학년 교실 · 특별실 · 교무실',
+        subject: '1학년 교실 · 역사관 · 방송실 · 교무실',
         topLabel: '상단 1학년 교실 구역',
         topCols: 4,
         topRooms: [
@@ -209,13 +188,17 @@ const BUILDINGS = [
         ],
         corridorLabel: '2층 복도 · 창의관 2층 연결통로 방면 →',
         hasBridgeToChangui: true,
-        bottomLabel: '하단 특별실 · 교무 지원 구역',
+        bottomLabel: '하단 특별실 · 교무 · 학습 지원 구역',
         bottomCols: 4,
         bottomRooms: [
           { id: 'ss-2-hist', name: '역사관', type: 'primary' },
           { id: 'ss-2-broad', name: '방송실', type: 'primary' },
-          { id: 'ss-2-staff', name: '교무실 · 1학년실', type: 'facility' },
-          { id: 'ss-2-study', name: '면학실 · 사감실', type: 'facility' }
+          { id: 'ss-2-t1', name: '1학년실', type: 'facility' },
+          { id: 'ss-2-vp', name: '교감실', type: 'facility' },
+          { id: 'ss-2-staff', name: '교무실', type: 'facility' },
+          { id: 'ss-2-adm', name: '입학담당관실', type: 'facility' },
+          { id: 'ss-2-sup', name: '사감실', type: 'facility' },
+          { id: 'ss-2-study', name: '면학실', type: 'facility' }
         ]
       },
       {
@@ -232,18 +215,19 @@ const BUILDINGS = [
         ],
         corridorLabel: '3층 복도',
         bottomLabel: '하단 도서관 · 학습 지원 구역',
-        bottomCols: 4,
+        bottomCols: 3,
         bottomRooms: [
+          { id: 'ss-3-hist', name: '역사관', type: 'primary' },
           { id: 'ss-3-lib1', name: '도서관', type: 'primary' },
           { id: 'ss-3-lib2', name: '도서실', type: 'primary' },
-          { id: 'ss-3-hist', name: '역사관', type: 'primary' },
-          { id: 'ss-3-t2', name: '2학년실 · 면학실', type: 'facility' }
+          { id: 'ss-3-t2', name: '2학년실', type: 'facility' },
+          { id: 'ss-3-study', name: '면학실', type: 'facility' }
         ]
       },
       {
         id: '4F',
         label: '4층',
-        subject: '3학년 교실 · 무한상상실 · 학생회의실',
+        subject: '3학년 교실 · 학생회의실 · 무한상상실',
         topLabel: '상단 3학년 교실 구역',
         topCols: 4,
         topRooms: [
@@ -254,12 +238,14 @@ const BUILDINGS = [
         ],
         corridorLabel: '4층 복도',
         bottomLabel: '하단 특별실 · 학생자치 구역',
-        bottomCols: 4,
+        bottomCols: 3,
         bottomRooms: [
-          { id: 'ss-4-maker', name: '무한상상실', type: 'primary' },
           { id: 'ss-4-council', name: '학생회의실', type: 'primary' },
+          { id: 'ss-4-maker', name: '무한상상실', type: 'primary' },
           { id: 'ss-4-math', name: '수학실', type: 'primary' },
-          { id: 'ss-4-lang', name: '어학실', type: 'primary' }
+          { id: 'ss-4-lang', name: '어학실', type: 'primary' },
+          { id: 'ss-4-t3', name: '3학년실', type: 'facility' },
+          { id: 'ss-4-study', name: '면학실', type: 'facility' }
         ]
       }
     ]
@@ -303,8 +289,7 @@ const BUILDINGS = [
             subtitle: '성실관 2층 바로가기',
             type: 'bridge',
             targetBuildingId: 'seongsil',
-            targetFloorId: '2F',
-            targetRoomId: 'ss-2-101'
+            targetFloorId: '2F'
           },
           { id: 'cu-2-parent', name: '학부모회실', type: 'facility' },
           { id: 'cu-2-math1', name: '수학실1', type: 'primary' },
@@ -393,19 +378,19 @@ const BUILDINGS = [
         id: '1F',
         label: '1층',
         subject: '예체능실 (음악·미술·실내체육)',
-        topLabel: '상단 음악 · 미술 주요 활용 구역',
+        topLabel: '상단 음악 · 미술 구역',
         topCols: 4,
         topRooms: [
-          { id: 'sc-1-music', name: '음악실', subtitle: '주요 활용', type: 'primary' },
-          { id: 'sc-1-piano', name: '피아노실', subtitle: '주요 활용', type: 'primary' },
-          { id: 'sc-1-inst', name: '기악실', subtitle: '주요 활용', type: 'primary' },
-          { id: 'sc-1-art', name: '미술실', subtitle: '주요 활용', type: 'primary' }
+          { id: 'sc-1-music', name: '음악실', type: 'primary' },
+          { id: 'sc-1-piano', name: '피아노실', type: 'primary' },
+          { id: 'sc-1-inst', name: '기악실', type: 'primary' },
+          { id: 'sc-1-art', name: '미술실', type: 'primary' }
         ],
         corridorLabel: '성취관 1층 예체능실 복도',
         bottomLabel: '하단 실내 체육 · 연습 구역',
         bottomCols: 4,
         bottomRooms: [
-          { id: 'sc-1-pingpong', name: '탁구실', subtitle: '주요 활용', type: 'primary' },
+          { id: 'sc-1-pingpong', name: '탁구실', type: 'primary' },
           { id: 'sc-1-yoga', name: '요가실', type: 'secondary' },
           { id: 'sc-1-golf', name: '골프연습실', type: 'secondary' },
           { id: 'sc-1-fitness', name: '체력단련실', type: 'secondary' }
@@ -495,7 +480,7 @@ const ROOM_ALIASES = {
   '시약실': 'cu-4-reag',
   '기기실+시약실': 'cu-4-reag',
 
-  // 창의관 3층 생명과학 (생명과학실 포함)
+  // 창의관 3층 생명과학
   '생명과학실': 'cu-3-lab',
   '생명과학실험실': 'cu-3-lab',
   '생물실험실': 'cu-3-lab',
@@ -907,7 +892,7 @@ const DEFAULT_GWAGURI_RAW_TEXT = `10월 12일 07시 07분 29초
 지도교사김희웅
 지원X`;
 
-const STORAGE_KEY = 'gwaguri_tamhwal_entries_v2';
+const STORAGE_KEY = 'gwaguri_tamhwal_entries_v3';
 
 /**
  * ============================================================================
@@ -1039,7 +1024,6 @@ function parseGwaguriRawText(rawText) {
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
 
-    // 신청 시각 줄 (예: 10월 12일 07시 07분 29초)
     if (TIMESTAMP_REGEX.test(line)) {
       lastTimestamp = line;
       lastActiveField = null;
@@ -1050,7 +1034,6 @@ function parseGwaguriRawText(rawText) {
     if (fieldMatch) {
       let { label, rest } = fieldMatch;
 
-      // 브라우저에서 표/블록 복사 시 레이블과 값이 다음 줄로 분리된 경우 자동 결합
       if (!rest && i + 1 < lines.length) {
         const nextLine = lines[i + 1];
         if (!TIMESTAMP_REGEX.test(nextLine) && !matchFieldPrefix(nextLine)) {
@@ -1064,7 +1047,6 @@ function parseGwaguriRawText(rawText) {
       continue;
     }
 
-    // 여러 줄로 이어진 활동내용 또는 참가학생 보완 처리
     if (current && lastActiveField === '활동내용') {
       current.content = `${current.content} ${line}`.trim();
     } else if (current && lastActiveField === '참가학생') {
@@ -1138,13 +1120,13 @@ function formatShortKoreanDate(dateStr) {
 
 /**
  * ============================================================================
- * 6. 삼성 캘린더(One UI) 스타일 월간 날짜 선택 팝오버 컴포넌트
+ * 6. 월간 날짜 선택 팝오버 컴포넌트 (단정한 사각 테두리 디자인)
  * ============================================================================
  */
-function SamsungCalendarPopover({
+function MonthlyCalendarPopover({
   selectedDate,
   todayDate,
-  datesWithData,
+  dateCountMap,
   onSelectDate,
   onClose
 }) {
@@ -1213,22 +1195,22 @@ function SamsungCalendarPopover({
 
   return (
     <div
-      className="absolute left-1/2 top-full mt-2.5 z-50 w-[320px] -translate-x-1/2 rounded-2xl bg-[#242526] p-4 text-white shadow-2xl border border-[#3a3b3c]"
+      className="absolute left-1/2 top-full mt-2 z-50 w-[332px] -translate-x-1/2 rounded-[6px] bg-white p-4 text-[#222222] shadow-lg border border-[#bdbdbd]"
       role="dialog"
       aria-label="날짜 선택 달력"
     >
-      {/* 상단 연월 & 위아래 화살표 */}
-      <div className="mb-3.5 flex items-center justify-between px-1">
-        <span className="text-[16px] font-bold tracking-tight text-white">
+      {/* 상단 연월 & 월 이동 버튼 */}
+      <div className="mb-3 flex items-center justify-between border-b border-[#eeeeee] pb-2.5">
+        <span className="text-[15px] font-bold text-[#111111]">
           {viewYear}년 {viewMonth + 1}월
         </span>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={handlePrevMonth}
             aria-label="이전 달"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#b0b3b8] hover:bg-white/10 hover:text-white transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] text-[#444444] hover:bg-[#efefef]"
           >
             <ChevronUpIcon className="h-4 w-4" />
           </button>
@@ -1236,78 +1218,87 @@ function SamsungCalendarPopover({
             type="button"
             onClick={handleNextMonth}
             aria-label="다음 달"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#b0b3b8] hover:bg-white/10 hover:text-white transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] text-[#444444] hover:bg-[#efefef]"
           >
             <ChevronDownIcon className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* 요일 헤더 (일 월 화 수 목 금 토) */}
-      <div className="mb-2 grid grid-cols-7 text-center text-[13px] font-semibold text-[#e4e6eb]">
-        {WEEKDAYS_KO.map((w) => (
-          <div key={w} className="py-1">
+      {/* 요일 헤더 */}
+      <div className="mb-1.5 grid grid-cols-7 text-center text-[12px] font-bold text-[#666666]">
+        {WEEKDAYS_KO.map((w, idx) => (
+          <div
+            key={w}
+            className={`py-1 ${
+              idx === 0 ? 'text-red-600' : idx === 6 ? 'text-blue-600' : ''
+            }`}
+          >
             {w}
           </div>
         ))}
       </div>
 
       {/* 날짜 그리드 */}
-      <div className="grid grid-cols-7 gap-y-1 text-center">
+      <div className="grid grid-cols-7 gap-1 text-center">
         {calendarCells.map((cell) => {
           const isSelected = cell.ymd === selectedDate;
+          const isTodayCell = cell.ymd === todayDate;
           const isBeforeToday = cell.ymd < todayDate;
-          const hasData = datesWithData.has(cell.ymd);
+          const count = dateCountMap.get(cell.ymd) || 0;
 
           return (
-            <div key={cell.ymd} className="flex items-center justify-center py-0.5">
-              <button
-                type="button"
-                disabled={isBeforeToday}
-                onClick={() => {
-                  onSelectDate(cell.ymd);
-                  onClose();
-                }}
-                className={`relative flex h-9 w-9 flex-col items-center justify-center rounded-full text-[14px] transition-colors ${
-                  isSelected
-                    ? 'bg-[#0095ff] font-extrabold text-white shadow-sm'
-                    : isBeforeToday
-                    ? 'cursor-not-allowed text-[#5c5e62]'
-                    : cell.inCurrentMonth
-                    ? 'font-medium text-[#f5f6f7] hover:bg-white/15'
-                    : 'font-normal text-[#76787d] hover:bg-white/10'
-                }`}
-              >
-                <span>{cell.day}</span>
-                {hasData && !isBeforeToday && (
-                  <span
-                    className={`absolute bottom-1 h-1 w-1 rounded-full ${
-                      isSelected ? 'bg-white' : 'bg-[#76b9ad]'
-                    }`}
-                  />
-                )}
-              </button>
-            </div>
+            <button
+              key={cell.ymd}
+              type="button"
+              disabled={isBeforeToday}
+              onClick={() => {
+                onSelectDate(cell.ymd);
+                onClose();
+              }}
+              className={`relative flex h-10 flex-col items-center justify-center rounded-[4px] text-[13px] transition-colors ${
+                isSelected
+                  ? 'bg-[#5aa396] font-bold text-white'
+                  : isTodayCell
+                  ? 'border border-[#5aa396] bg-[#eef7f5] font-bold text-[#25574e]'
+                  : isBeforeToday
+                  ? 'cursor-not-allowed text-[#bbbbbb]'
+                  : cell.inCurrentMonth
+                  ? 'font-medium text-[#222222] hover:bg-[#f2f2f2]'
+                  : 'font-normal text-[#aaaaaa] hover:bg-[#f7f7f7]'
+              }`}
+            >
+              <span className="leading-none">{cell.day}</span>
+              {count > 0 && !isBeforeToday && (
+                <span
+                  className={`mt-1 text-[10px] font-bold leading-none ${
+                    isSelected ? 'text-white/95' : 'text-[#5aa396]'
+                  }`}
+                >
+                  {count}건
+                </span>
+              )}
+            </button>
           );
         })}
       </div>
 
       {/* 하단 오늘 바로가기 & 닫기 */}
-      <div className="mt-3 flex items-center justify-between border-t border-[#3a3b3c] pt-2.5 px-1 text-[13px]">
+      <div className="mt-3 flex items-center justify-between border-t border-[#eeeeee] pt-2.5 text-[12.5px]">
         <button
           type="button"
           onClick={() => {
             onSelectDate(todayDate);
             onClose();
           }}
-          className="font-bold text-[#4da6ff] hover:underline"
+          className="font-bold text-[#498d81] hover:underline"
         >
           오늘 ({formatShortKoreanDate(todayDate)})
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="text-[#b0b3b8] hover:text-white"
+          className="rounded-[4px] border border-[#dcdcdc] px-2.5 py-1 text-[#555555] hover:bg-[#f5f5f5]"
         >
           닫기
         </button>
@@ -1318,11 +1309,10 @@ function SamsungCalendarPopover({
 
 /**
  * ============================================================================
- * 7. 메인 애플리케이션 컴포넌트 (공용 과구리 탐활 공간 현황 맵)
+ * 7. 메인 애플리케이션 컴포넌트 (과구리 탐활 현황 맵)
  * ============================================================================
  */
 export default function App() {
-  // 초기 상태: localStorage 저장 데이터가 있으면 불러오고, 없으면 최신 27건 기본 데이터 로드
   const [entries, setEntries] = useState(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -1333,12 +1323,12 @@ export default function App() {
         }
       }
     } catch {
-      // localStorage 접근 불가 환경일 경우 기본 데이터로 진행
+      // ignore storage errors
     }
     return parseGwaguriRawText(DEFAULT_GWAGURI_RAW_TEXT);
   });
 
-  // 화면 전환 상태: 'overview' (건물 3개 센터 화면) | 'building' (건물 층별 평면도)
+  // 화면 전환 상태: 'overview' (캠퍼스 전체 지도) | 'building' (건물 층별 평면도)
   const [viewMode, setViewMode] = useState('overview');
   const [selectedBuildingId, setSelectedBuildingId] = useState('changui');
   const [selectedFloorId, setSelectedFloorId] = useState('2F');
@@ -1364,7 +1354,6 @@ export default function App() {
     }, 3200);
   };
 
-  // entries 변경 시 localStorage에 자동 동기화
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
@@ -1373,14 +1362,15 @@ export default function App() {
     }
   }, [entries]);
 
-  // 데이터가 존재하는 날짜 집합 (달력 점 표시용)
-  const datesWithData = useMemo(() => {
-    const set = new Set();
-    entries.forEach((e) => set.add(e.date));
-    return set;
+  // 날짜별 등록 건수 맵 (달력 표시용)
+  const dateCountMap = useMemo(() => {
+    const map = new Map();
+    entries.forEach((e) => {
+      map.set(e.date, (map.get(e.date) || 0) + 1);
+    });
+    return map;
   }, [entries]);
 
-  // 오늘 날짜인지 판별 (오늘일 때는 왼쪽 '<' 버튼 숨김)
   const isToday = selectedDate <= TODAY_STR;
 
   const handlePrevDay = () => {
@@ -1481,36 +1471,30 @@ export default function App() {
     const totalCount = filteredEntries.length;
     const activeRoomIds = Object.keys(entriesByRoom);
     const activeRoomsCount = activeRoomIds.length;
-    const duplicateRooms = activeRoomIds
-      .filter((id) => entriesByRoom[id].length >= 2)
-      .map((id) => ({
-        ...ROOM_BY_ID[id],
-        count: entriesByRoom[id].length,
-        entries: entriesByRoom[id]
-      }));
+    const duplicateRoomsCount = activeRoomIds.filter(
+      (id) => entriesByRoom[id].length >= 2
+    ).length;
 
     return {
       totalCount,
       activeRoomsCount,
-      duplicateRooms
+      duplicateRoomsCount
     };
   }, [filteredEntries, entriesByRoom]);
 
-  // 검색어 정규화 및 매칭 결과 (빠른 점프용)
+  // 검색어 정규화 및 매칭 결과
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
   const searchResults = useMemo(() => {
     if (!normalizedQuery) {
       return {
         matchedRoomIds: new Set(),
-        matchedFloorKeys: new Set(),
         matchedBuildingIds: new Set(),
         matchedItems: []
       };
     }
 
     const matchedRoomIds = new Set();
-    const matchedFloorKeys = new Set();
     const matchedBuildingIds = new Set();
     const matchedItems = [];
 
@@ -1528,7 +1512,6 @@ export default function App() {
         matchedItems.push({ item, room });
         if (room) {
           matchedRoomIds.add(room.id);
-          matchedFloorKeys.add(`${room.buildingId}-${room.floorId}`);
           matchedBuildingIds.add(room.buildingId);
         }
       }
@@ -1536,7 +1519,6 @@ export default function App() {
 
     const aliasRoom = resolveRoomByName(normalizedQuery);
     ALL_ROOMS.forEach((room) => {
-      if (room.type === 'facility') return;
       const nameHit =
         room.name.toLowerCase().includes(normalizedQuery) ||
         (room.subtitle && room.subtitle.toLowerCase().includes(normalizedQuery)) ||
@@ -1544,20 +1526,17 @@ export default function App() {
 
       if (nameHit) {
         matchedRoomIds.add(room.id);
-        matchedFloorKeys.add(`${room.buildingId}-${room.floorId}`);
         matchedBuildingIds.add(room.buildingId);
       }
     });
 
     return {
       matchedRoomIds,
-      matchedFloorKeys,
       matchedBuildingIds,
       matchedItems
     };
   }, [normalizedQuery, filteredEntries]);
 
-  // 특정 실로 즉시 네비게이션
   const navigateToRoom = (room) => {
     if (!room) return;
     setSelectedBuildingId(room.buildingId);
@@ -1566,7 +1545,6 @@ export default function App() {
     setViewMode('building');
   };
 
-  // 특정 건물의 특정 층으로 즉시 네비게이션
   const navigateToFloor = (buildingId, floorId) => {
     setSelectedBuildingId(buildingId);
     setSelectedFloorId(floorId);
@@ -1577,11 +1555,10 @@ export default function App() {
       (r) => (entriesByRoom[r.id]?.length || 0) > 0
     );
     const defaultR = floorRooms.find((r) => r.type !== 'facility');
-    setSelectedRoomId(activeR?.id || defaultR?.id || null);
+    setSelectedRoomId(activeR?.id || defaultR?.id || floorRooms[0]?.id || null);
     setViewMode('building');
   };
 
-  // 건물 클릭 진입 핸들러
   const handleEnterBuilding = (buildingId) => {
     const building = BUILDINGS.find((b) => b.id === buildingId);
     if (!building) return;
@@ -1609,12 +1586,10 @@ export default function App() {
     navigateToFloor(buildingId, bestFloor.id);
   };
 
-  // 붙여넣기 모달 실시간 파싱 미리보기
   const previewParsedEntries = useMemo(() => {
     return parseGwaguriRawText(pasteInput);
   }, [pasteInput]);
 
-  // 붙여넣은 과구리 데이터 적용
   const handleApplyPastedText = () => {
     if (previewParsedEntries.length === 0) {
       showToast('인식된 탐활 내역이 없습니다. 과구리 탐활서 내용을 그대로 붙여넣어 주세요.');
@@ -1628,10 +1603,9 @@ export default function App() {
 
     setIsPasteModalOpen(false);
     setPasteInput('');
-    showToast(`과구리 탐활 데이터 ${previewParsedEntries.length}건이 지도에 반영 및 저장되었습니다.`);
+    showToast(`과구리 탐활 데이터 ${previewParsedEntries.length}건이 지도에 반영되었습니다.`);
   };
 
-  // 최신 27건 기본 데이터로 초기화
   const handleResetToDefaultData = () => {
     const defaultParsed = parseGwaguriRawText(DEFAULT_GWAGURI_RAW_TEXT);
     setEntries(defaultParsed);
@@ -1641,7 +1615,6 @@ export default function App() {
     showToast(`최신 기본 탐활 데이터 ${defaultParsed.length}건으로 초기화되었습니다.`);
   };
 
-  // 현재 활성 건물, 층, 실 객체
   const activeBuilding = useMemo(
     () => BUILDINGS.find((b) => b.id === selectedBuildingId) || BUILDINGS[0],
     [selectedBuildingId]
@@ -1657,11 +1630,10 @@ export default function App() {
 
   /**
    * ==========================================================================
-   * 평면도 내부 개별 실(Room) 카드 렌더러 (충분한 카드 폭 + 큰 글씨 + 겹침 제로)
+   * 평면도 내부 개별 실(Room) 카드 렌더러 (단정한 사각 테두리 + 큰 글씨 + 겹침 제로)
    * ==========================================================================
    */
-  const renderRoomTile = (room, minHeightClass = 'min-h-[120px]') => {
-    // 2층 연결통로 특수 카드 처리 (클릭 시 성실관 2층으로 즉시 이동)
+  const renderRoomTile = (room, minHeightClass = 'min-h-[114px]') => {
     if (room.type === 'bridge') {
       return (
         <button
@@ -1673,17 +1645,17 @@ export default function App() {
               room.targetFloorId || '2F'
             )
           }
-          className={`group flex flex-col justify-between border-2 border-dashed border-[#6cb5a8] bg-[#eef8f6] hover:bg-[#dff2ee] p-3.5 text-left transition-colors ${minHeightClass}`}
+          className={`group flex flex-col justify-between rounded-[4px] border border-dashed border-[#5aa396] bg-[#eef7f5] hover:bg-[#e0f1ed] p-3 text-left transition-colors ${minHeightClass}`}
         >
           <div>
-            <span className="inline-block bg-[#5aa396] px-2 py-0.5 text-[11px] font-extrabold text-white">
+            <span className="inline-block rounded-[3px] bg-[#5aa396] px-1.5 py-0.5 text-[11px] font-bold text-white">
               건물 연결통로
             </span>
-            <h4 className="mt-1.5 text-[15px] sm:text-[16px] font-extrabold text-[#1d3b36] leading-snug">
+            <h4 className="mt-1.5 text-[14.5px] font-bold text-[#1d3b36] leading-snug">
               {room.name}
             </h4>
           </div>
-          <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-[#25574e] group-hover:underline">
+          <span className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-bold text-[#25574e] group-hover:underline">
             <ArrowLeftIcon className="h-3.5 w-3.5" />
             <span>{room.subtitle || '성실관 2층 이동'}</span>
           </span>
@@ -1699,11 +1671,11 @@ export default function App() {
 
     let cardStyle = '';
     if (count >= 2) {
-      cardStyle = 'bg-amber-50 border-amber-400 text-amber-950';
+      cardStyle = 'bg-[#fffbeb] border-[#f59e0b] text-[#78350f]';
     } else if (count === 1) {
-      cardStyle = 'bg-[#e6f5f2] border-[#6cb5a8] text-[#1d3b36]';
+      cardStyle = 'bg-[#eef8f6] border-[#6cb5a8] text-[#1d3b36]';
     } else if (isFacility) {
-      cardStyle = 'bg-[#f4f4f4] border-[#dcdcdc] text-[#666666] hover:bg-[#ececec]';
+      cardStyle = 'bg-[#f5f5f5] border-[#dcdcdc] text-[#666666] hover:bg-[#eeeeee]';
     } else {
       cardStyle =
         'bg-white border-[#d6d6d6] text-[#222222] hover:border-[#6cb5a8] hover:bg-[#f9fcfb]';
@@ -1714,69 +1686,64 @@ export default function App() {
         key={room.id}
         type="button"
         onClick={() => setSelectedRoomId(room.id)}
-        className={`group relative flex flex-col justify-between border p-3.5 text-left transition-all duration-150 focus:outline-none ${minHeightClass} ${cardStyle} ${
-          isSelected ? 'ring-2 ring-[#5aa396] border-[#5aa396] z-10 shadow-sm' : ''
-        } ${isSearchHit ? 'ring-2 ring-[#e87a3d] border-[#e87a3d]' : ''}`}
+        className={`group relative flex flex-col justify-between rounded-[4px] border p-3 text-left transition-colors focus:outline-none ${minHeightClass} ${cardStyle} ${
+          isSelected ? 'ring-2 ring-[#498d81] border-[#498d81] z-10' : ''
+        } ${isSearchHit ? 'ring-2 ring-[#d97706] border-[#d97706]' : ''}`}
       >
-        {/* 상단: 실 이름(15~16px) & 우측 상단 상태 배지 */}
         <div className="flex w-full items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h4
-              className={`text-[15px] sm:text-[16px] leading-snug break-keep ${
+              className={`text-[14.5px] sm:text-[15px] leading-snug break-keep ${
                 isFacility && count === 0
-                  ? 'font-semibold text-[#555555]'
-                  : 'font-extrabold text-[#222222]'
+                  ? 'font-medium text-[#555555]'
+                  : 'font-bold text-[#111111]'
               }`}
             >
               {room.name}
             </h4>
             {room.subtitle && (
-              <span className="mt-1 inline-block border border-[#dcdcdc] bg-white/90 px-2 py-0.5 text-[12px] font-semibold text-[#555555]">
+              <span className="mt-1 inline-block rounded-[3px] border border-[#dcdcdc] bg-white px-1.5 py-0.5 text-[11px] font-medium text-[#666666]">
                 {room.subtitle}
               </span>
             )}
           </div>
 
           {count >= 2 && (
-            <span className="shrink-0 whitespace-nowrap border border-amber-400 bg-amber-500/15 px-2 py-0.5 text-[12px] font-extrabold text-amber-900">
+            <span className="shrink-0 whitespace-nowrap rounded-[3px] border border-[#f59e0b] bg-[#fef3c7] px-1.5 py-0.5 text-[11.5px] font-bold text-[#92400e]">
               {count}팀 중복
             </span>
           )}
           {count === 1 && (
-            <span className="shrink-0 whitespace-nowrap border border-[#6cb5a8] bg-[#6cb5a8]/20 px-2 py-0.5 text-[12px] font-extrabold text-[#25574e]">
+            <span className="shrink-0 whitespace-nowrap rounded-[3px] border border-[#6cb5a8] bg-[#d6efe9] px-1.5 py-0.5 text-[11.5px] font-bold text-[#1f5249]">
               1팀 사용
             </span>
           )}
         </div>
 
-        {/* 하단: 참여 팀 요약(13px) 또는 상태 텍스트 */}
-        <div className="mt-3 w-full">
+        <div className="mt-2.5 w-full">
           {count > 0 ? (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               {roomEntries.map((item) => (
                 <div
                   key={item.id}
-                  className={`truncate px-2.5 py-1.5 text-[13px] leading-tight ${
+                  className={`truncate rounded-[3px] px-2 py-1 text-[12.5px] leading-tight ${
                     count >= 2
-                      ? 'bg-amber-200/70 text-amber-950'
-                      : 'bg-[#cdebe5] text-[#1d3b36]'
+                      ? 'bg-[#fde68a]/65 text-[#78350f]'
+                      : 'bg-[#d6efe9] text-[#1d3b36]'
                   }`}
                   title={`${item.leader} · ${item.content}`}
                 >
-                  <span className="font-extrabold">{item.leader}</span>
+                  <span className="font-bold">{item.leader}</span>
                   {item.members.length > 1 && (
-                    <span className="font-medium opacity-80">
-                      {' '}
-                      외 {item.members.length - 1}명
-                    </span>
+                    <span className="opacity-80"> 외 {item.members.length - 1}명</span>
                   )}
-                  <span className="mx-1.5 opacity-40">|</span>
-                  <span className="font-medium opacity-95">{item.content}</span>
+                  <span className="mx-1 opacity-40">|</span>
+                  <span>{item.content}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <span className="inline-block text-[13px] font-normal text-[#888888]">
+            <span className="inline-block text-[12px] text-[#888888]">
               {isFacility ? '행정 · 지원 구역' : '비어 있음'}
             </span>
           )}
@@ -1785,9 +1752,6 @@ export default function App() {
     );
   };
 
-  /**
-   * 2단 블록 그리드 컬럼 클래스 매핑 (Tailwind 동적 클래스 누락 방지)
-   */
   const getGridColsClass = (cols) => {
     if (cols === 1) return 'grid-cols-1';
     if (cols === 2) return 'grid-cols-1 sm:grid-cols-2';
@@ -1800,50 +1764,49 @@ export default function App() {
       className="min-h-screen w-full bg-[#efefef] text-[#222222] flex flex-col"
       style={{
         fontFamily:
-          '"Pretendard Variable", Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+          "'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif"
       }}
     >
       <style>{`
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
       `}</style>
 
       {/* ====================================================================
-          1. 과구리 최상단 민트색 그라데이션 헤더 (높이 60px, 26px 로고)
+          1. 과구리 최상단 민트색 그라데이션 헤더 (높이 58px, 24px 굵은 고딕)
          ==================================================================== */}
       <header className="w-full bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] text-white">
-        <div className="mx-auto flex h-[60px] max-w-[1280px] items-center justify-between px-4 sm:px-8">
-          {/* 좌측: 과구리 2x2 사각형 모자이크 로고 + 26px 타이틀 + 부제 */}
+        <div className="mx-auto flex h-[58px] max-w-[1280px] items-center justify-between px-5">
+          {/* 좌측: 2×2 사각형 모자이크 로고 + 과구리 + 소개 | 학생부 전산시스템 */}
           <div className="flex items-center gap-3.5 min-w-0">
             <button
               type="button"
               onClick={() => setViewMode('overview')}
-              className="flex items-center gap-3 text-left group shrink-0"
-              title="과구리 탐활 공간 현황 홈으로"
+              className="flex items-center gap-2.5 text-left shrink-0"
+              title="과구리 탐활 현황 맵 홈으로"
             >
-              <div className="grid h-8 w-8 grid-cols-2 grid-rows-2 overflow-hidden shadow-2xs group-hover:scale-105 transition-transform">
+              <div className="grid h-7 w-7 grid-cols-2 grid-rows-2 overflow-hidden">
                 <span className="bg-[#2d3e40]" />
                 <span className="bg-[#c3e5de]" />
                 <span className="bg-[#95c9be]" />
                 <span className="bg-[#58968b]" />
               </div>
-              <span className="text-[26px] font-extrabold tracking-tight text-white leading-none">
+              <span className="text-[24px] font-bold tracking-tight text-white leading-none">
                 과구리
               </span>
             </button>
 
-            <div className="hidden md:flex items-center gap-2.5 text-[14px] text-white/95 truncate">
-              <span className="font-medium">소개</span>
+            <div className="hidden md:flex items-center gap-2 text-[13.5px] text-white/95 truncate">
+              <span>소개</span>
               <span className="opacity-60">|</span>
-              <span className="font-medium">학생부 전산시스템 · 공용 탐활 공간 현황</span>
+              <span>학생부 전산시스템</span>
             </div>
           </div>
 
-          {/* 우측: 공용 데이터 붙여넣기 버튼 */}
+          {/* 우측: 탐활서 데이터 붙여넣기 버튼 */}
           <button
             type="button"
             onClick={() => setIsPasteModalOpen(true)}
-            className="inline-flex items-center gap-2 border border-white/75 bg-white/15 hover:bg-white/25 px-3.5 py-2 text-[14px] font-bold text-white transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-[4px] border border-white/80 bg-white/15 hover:bg-white/25 px-3 py-1.5 text-[13.5px] font-bold text-white transition-colors"
           >
             <ClipboardPasteIcon className="h-4 w-4" />
             <span>탐활서 데이터 붙여넣기</span>
@@ -1858,9 +1821,9 @@ export default function App() {
         aria-label="과구리 전체 메뉴"
         className="w-full border-b border-[#dcdcdc] bg-white"
       >
-        <div className="mx-auto max-w-[1280px] px-4 sm:px-8">
+        <div className="mx-auto max-w-[1280px] px-5">
           {/* 1행 */}
-          <div className="flex items-center justify-start md:justify-center gap-7 sm:gap-11 overflow-x-auto py-3 text-[15px] font-bold text-[#222222] border-b border-[#f0f0f0]">
+          <div className="flex items-center justify-start md:justify-center gap-7 sm:gap-11 overflow-x-auto py-2.5 text-[14.5px] font-bold text-[#222222] border-b border-[#f0f0f0]">
             {GNB_ROW_1.map((menu) => (
               <button
                 key={menu}
@@ -1880,7 +1843,7 @@ export default function App() {
           </div>
 
           {/* 2행 */}
-          <div className="flex items-center justify-start md:justify-center gap-7 sm:gap-11 overflow-x-auto py-3 text-[15px] font-bold text-[#222222]">
+          <div className="flex items-center justify-start md:justify-center gap-7 sm:gap-11 overflow-x-auto py-2.5 text-[14.5px] font-bold text-[#222222]">
             {GNB_ROW_2.map((menu) => {
               const isActive = menu === '탐활 현황 맵';
               return (
@@ -1896,13 +1859,13 @@ export default function App() {
                   }}
                   className={`relative whitespace-nowrap transition-colors ${
                     isActive
-                      ? 'text-[#5aa396] font-extrabold'
+                      ? 'text-[#5aa396]'
                       : 'text-[#222222] hover:text-[#5aa396]'
                   }`}
                 >
                   {menu}
                   {isActive && (
-                    <span className="absolute -bottom-3 left-0 right-0 h-[3px] bg-[#5aa396]" />
+                    <span className="absolute -bottom-2.5 left-0 right-0 h-[3px] bg-[#5aa396]" />
                   )}
                 </button>
               );
@@ -1913,182 +1876,173 @@ export default function App() {
 
       {/* 알림 토스트 */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 border border-[#5aa396] bg-[#2d3e40] px-4 py-3 text-[14px] font-bold text-white shadow-lg">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-[4px] border border-[#5aa396] bg-[#2d3e40] px-4 py-2.5 text-[13.5px] font-bold text-white shadow-md">
           <CheckCircleIcon className="h-4 w-4 text-[#96cfc4] shrink-0" />
           <span>{toast}</span>
         </div>
       )}
 
       {/* ====================================================================
-          3. 메인 중앙 컨테이너 (max-w-[1280px])
+          3. 본문 컨테이너 (max-w-[1280px] mx-auto px-5 py-6)
          ==================================================================== */}
-      <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 sm:px-8 py-6">
+      <main className="mx-auto w-full max-w-[1280px] flex-1 px-5 py-6">
+        {/* 실제 과구리 '탐활서 확인' 페이지와 동일한 상단 타이틀 + 굵은 하단 구분선 */}
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-2 border-b-2 border-[#222222] pb-3">
+          <h1 className="text-[24px] font-bold tracking-tight text-[#111111] leading-none">
+            탐활 현황 맵
+          </h1>
+          <span className="text-[13px] text-[#666666]">
+            전남과학고등학교 탐구활동 공간 배정 현황
+          </span>
+        </div>
+
         {/* ==================================================================
-            [첫 화면: 캠퍼스 전체 맵] 날짜 선택 + 요약/필터 + 건물 3개 일러스트
+            [첫 화면: 캠퍼스 전체 맵] 컨트롤 박스 + 실제 학교 전경 SVG 지도
            ================================================================== */}
         {viewMode === 'overview' ? (
-          <div className="border border-[#dcdcdc] bg-white p-5 sm:p-7 space-y-5">
-            {/* 상단 중앙 날짜 네비게이터 (< 11월 16일 (월) > + 달력 버튼) */}
-            <div className="flex flex-col items-center justify-center border-b border-[#eeeeee] pb-5">
-              <div className="relative flex items-center justify-center gap-3.5 sm:gap-5">
-                {/* 왼쪽 화살표: 오늘(2026-11-16)일 때는 숨겨서 오른쪽 방향만 표시 */}
-                <button
-                  type="button"
-                  onClick={handlePrevDay}
-                  disabled={isToday}
-                  aria-label="이전 날짜"
-                  className={`flex h-9 w-9 items-center justify-center rounded-full bg-[#e87a3d] hover:bg-[#d6692d] text-white transition-all shadow-xs ${
-                    isToday ? 'invisible pointer-events-none' : 'visible'
-                  }`}
-                >
-                  <ChevronLeftIcon className="h-5 w-5" />
-                </button>
+          <div className="space-y-4">
+            {/* 상단 컨트롤 박스 */}
+            <div className="rounded-[6px] border border-[#dcdcdc] bg-white p-5">
+              {/* 중앙 날짜 이동기 (< 11월 16일 (월) > + 달력 버튼) */}
+              <div className="flex flex-col items-center justify-center border-b border-[#eeeeee] pb-4">
+                <div className="relative flex items-center justify-center gap-3">
+                  {/* 오늘(2026-11-16)일 때는 왼쪽 '<' 화살표 숨김 */}
+                  <button
+                    type="button"
+                    onClick={handlePrevDay}
+                    disabled={isToday}
+                    aria-label="이전 날짜"
+                    className={`flex h-8 w-8 items-center justify-center rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] text-[#333333] transition-colors ${
+                      isToday ? 'invisible pointer-events-none' : 'visible'
+                    }`}
+                  >
+                    <ChevronLeftIcon className="h-4 w-4" />
+                  </button>
 
-                {/* 중앙 큰 날짜 표시 */}
-                <div className="flex items-center gap-2.5">
-                  <h1 className="text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#222222] leading-tight">
-                    {formatShortKoreanDate(selectedDate)}
-                  </h1>
-                  {selectedDate === TODAY_STR && (
-                    <span className="border border-[#bde0d9] bg-[#e6f5f2] px-2.5 py-0.5 text-[13px] font-extrabold text-[#25574e]">
-                      오늘
+                  <div className="flex items-center gap-2">
+                    <span className="text-[21px] sm:text-[23px] font-bold tracking-tight text-[#111111]">
+                      {formatShortKoreanDate(selectedDate)}
                     </span>
+                    {selectedDate === TODAY_STR && (
+                      <span className="rounded-[4px] border border-[#6cb5a8] bg-[#eef8f6] px-2 py-0.5 text-[12px] font-bold text-[#25574e]">
+                        오늘
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleNextDay}
+                    aria-label="다음 날짜"
+                    className="flex h-8 w-8 items-center justify-center rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] text-[#333333] transition-colors"
+                  >
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCalendarOpen((prev) => !prev)}
+                    className={`ml-1 inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[13.5px] font-bold transition-colors ${
+                      isCalendarOpen
+                        ? 'border-[#5aa396] bg-[#5aa396] text-white'
+                        : 'border-[#dcdcdc] bg-white text-[#222222] hover:bg-[#f5f5f5]'
+                    }`}
+                  >
+                    <CalendarIcon
+                      className={`h-4 w-4 ${
+                        isCalendarOpen ? 'text-white' : 'text-[#5aa396]'
+                      }`}
+                    />
+                    <span>달력</span>
+                  </button>
+
+                  {isCalendarOpen && (
+                    <MonthlyCalendarPopover
+                      selectedDate={selectedDate}
+                      todayDate={TODAY_STR}
+                      dateCountMap={dateCountMap}
+                      onSelectDate={(newDate) => setSelectedDate(newDate)}
+                      onClose={() => setIsCalendarOpen(false)}
+                    />
                   )}
                 </div>
 
-                {/* 오른쪽 화살표 */}
-                <button
-                  type="button"
-                  onClick={handleNextDay}
-                  aria-label="다음 날짜"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e87a3d] hover:bg-[#d6692d] text-white transition-colors shadow-xs"
-                >
-                  <ChevronRightIcon className="h-5 w-5" />
-                </button>
-
-                {/* 삼성 캘린더 스타일 달력 팝오버 버튼 */}
-                <button
-                  type="button"
-                  onClick={() => setIsCalendarOpen((prev) => !prev)}
-                  className={`ml-1 inline-flex items-center gap-1.5 border px-3.5 py-2 text-[14px] font-bold transition-colors ${
-                    isCalendarOpen
-                      ? 'border-[#242526] bg-[#242526] text-white'
-                      : 'border-[#dcdcdc] bg-[#fafafa] text-[#333333] hover:border-[#6cb5a8] hover:bg-[#f2faf8]'
-                  }`}
-                >
-                  <CalendarIcon className="h-4 w-4 text-[#5aa396]" />
-                  <span>달력</span>
-                </button>
-
-                {/* 삼성 캘린더 팝오버 */}
-                {isCalendarOpen && (
-                  <SamsungCalendarPopover
-                    selectedDate={selectedDate}
-                    todayDate={TODAY_STR}
-                    datesWithData={datesWithData}
-                    onSelectDate={(newDate) => setSelectedDate(newDate)}
-                    onClose={() => setIsCalendarOpen(false)}
-                  />
-                )}
-              </div>
-
-              {/* 날짜 아래 요약 지표 & 면학 시간대 필터 */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[14px] sm:text-[15px]">
-                <span className="text-[#555555]">
-                  전체 탐활 <strong className="text-[#222222]">{campusSummary.totalCount}건</strong>
-                </span>
-                <span className="text-[#dcdcdc]">|</span>
-                <span className="text-[#555555]">
-                  사용 중인 실{' '}
-                  <strong className="text-[#25574e]">{campusSummary.activeRoomsCount}곳</strong>
-                </span>
-                <span className="text-[#dcdcdc]">|</span>
-                <span className="text-[#555555]">
-                  중복 사용실{' '}
-                  <strong
-                    className={
-                      campusSummary.duplicateRooms.length > 0
-                        ? 'text-amber-700'
-                        : 'text-[#222222]'
-                    }
-                  >
-                    {campusSummary.duplicateRooms.length}곳
-                  </strong>
-                </span>
-
-                <div className="ml-0 sm:ml-2 flex items-center gap-1.5">
-                  {[
-                    { id: 'all', label: '전체 시간' },
-                    { id: '1', label: '1면학' },
-                    { id: '2', label: '2면학' },
-                    { id: '3', label: '3면학' }
-                  ].map((tf) => (
-                    <button
-                      key={tf.id}
-                      type="button"
-                      onClick={() => setSelectedTimeFilter(tf.id)}
-                      className={`border px-3 py-1.5 text-[13px] font-bold transition-colors ${
-                        selectedTimeFilter === tf.id
-                          ? 'border-[#5aa396] bg-[#6cb5a8] text-white'
-                          : 'border-[#dcdcdc] bg-[#fafafa] text-[#444444] hover:bg-[#efefef]'
+                {/* 요약 통계 (전체 탐활 N건 | 사용 중인 실 N곳 | 중복 사용실 N곳) + 시간 필터 */}
+                <div className="mt-3.5 flex flex-wrap items-center justify-center gap-3 text-[14px]">
+                  <span className="text-[#555555]">
+                    전체 탐활{' '}
+                    <strong className="font-bold text-[#111111]">
+                      {campusSummary.totalCount}건
+                    </strong>
+                  </span>
+                  <span className="text-[#dcdcdc]">|</span>
+                  <span className="text-[#555555]">
+                    사용 중인 실{' '}
+                    <strong className="font-bold text-[#25574e]">
+                      {campusSummary.activeRoomsCount}곳
+                    </strong>
+                  </span>
+                  <span className="text-[#dcdcdc]">|</span>
+                  <span className="text-[#555555]">
+                    중복 사용실{' '}
+                    <strong
+                      className={`font-bold ${
+                        campusSummary.duplicateRoomsCount > 0
+                          ? 'text-[#b45309]'
+                          : 'text-[#111111]'
                       }`}
                     >
-                      {tf.label}
-                    </button>
-                  ))}
+                      {campusSummary.duplicateRoomsCount}곳
+                    </strong>
+                  </span>
+
+                  <div className="ml-0 sm:ml-2 flex items-center gap-1">
+                    {[
+                      { id: 'all', label: '전체 시간' },
+                      { id: '1', label: '1면학' },
+                      { id: '2', label: '2면학' },
+                      { id: '3', label: '3면학' }
+                    ].map((tf) => (
+                      <button
+                        key={tf.id}
+                        type="button"
+                        onClick={() => setSelectedTimeFilter(tf.id)}
+                        className={`rounded-[4px] border px-2.5 py-1 text-[13px] font-bold transition-colors ${
+                          selectedTimeFilter === tf.id
+                            ? 'border-[#5aa396] bg-[#5aa396] text-white'
+                            : 'border-[#dcdcdc] bg-[#fafafa] text-[#444444] hover:bg-[#efefef]'
+                        }`}
+                      >
+                        {tf.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* 중복 사용실 빠른 점프 칩 (중복 발생 시에만 깔끔하게 표시) */}
-              {campusSummary.duplicateRooms.length > 0 && (
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-[13px] font-bold text-amber-800">
-                    <AlertTriangleIcon className="h-3.5 w-3.5 text-amber-600" />
-                    중복 사용실 바로가기:
-                  </span>
-                  {campusSummary.duplicateRooms.map((dupRoom) => (
-                    <button
-                      key={dupRoom.id}
-                      type="button"
-                      onClick={() => navigateToRoom(dupRoom)}
-                      className="inline-flex items-center gap-1.5 border border-amber-300 bg-amber-50 hover:bg-amber-100 px-3 py-1 text-[13px] font-bold text-amber-950 transition-colors"
-                    >
-                      <span>
-                        {dupRoom.buildingShortName} {dupRoom.floorLabel} {dupRoom.name}
-                      </span>
-                      <span className="bg-amber-200/80 px-1.5 py-0.2 text-[12px] font-extrabold text-amber-900">
-                        {dupRoom.count}팀
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 안내 문구 & 학생 이름/학번/주제/실 검색창 */}
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-[14px] sm:text-[15px] font-medium text-[#555555]">
+              {/* 안내 문구 & 우측 검색창 & 교외/기타 장소 버튼 */}
+              <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[13.5px] text-[#555555]">
                   건물을 클릭하면 층별 평면도와 사용 중인 팀 현황을 확인할 수 있습니다.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <div className="relative w-64 sm:w-80">
-                    <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#888888]" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative w-64 sm:w-72">
+                    <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#888888]" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="학생 이름, 학번, 주제, 실 이름 검색..."
-                      className="w-full border border-[#dcdcdc] bg-[#fafafa] py-2 pl-9 pr-8 text-[14px] text-[#222222] placeholder:text-[#999999] focus:border-[#6cb5a8] focus:bg-white focus:outline-none"
+                      placeholder="학생 이름, 학번, 실 이름 검색..."
+                      className="w-full rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] py-1.5 pl-8 pr-7 text-[13.5px] text-[#222222] placeholder:text-[#999999] focus:border-[#5aa396] focus:bg-white focus:outline-none"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#333333]"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#222222]"
                       >
-                        <XIcon className="h-4 w-4" />
+                        <XIcon className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
@@ -2097,27 +2051,27 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setIsOffCampusOpen(true)}
-                      className="inline-flex items-center gap-1.5 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 text-[14px] font-bold text-indigo-900 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-[4px] border border-[#c7d2fe] bg-[#eef2ff] hover:bg-[#e0e7ff] px-3 py-1.5 text-[13.5px] font-bold text-[#3730a3] transition-colors"
                     >
-                      <ExternalLinkIcon className="h-4 w-4 text-indigo-600" />
+                      <ExternalLinkIcon className="h-3.5 w-3.5" />
                       <span>교외/기타 장소 ({offCampusEntries.length}건)</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* 검색 결과 빠른 이동 배너 */}
+              {/* 검색 결과 빠른 이동 리스트 */}
               {normalizedQuery && (
-                <div className="border border-orange-200 bg-orange-50/75 p-3.5">
-                  <p className="text-[14px] font-extrabold text-orange-950 mb-2">
+                <div className="mt-3.5 rounded-[4px] border border-[#fcd34d] bg-[#fffbeb] p-3">
+                  <p className="text-[13px] font-bold text-[#92400e] mb-2">
                     '{searchQuery}' 검색 결과 ({searchResults.matchedItems.length}건)
                   </p>
                   {searchResults.matchedItems.length === 0 ? (
-                    <p className="text-[14px] text-[#666666]">
+                    <p className="text-[13px] text-[#666666]">
                       선택된 날짜에 일치하는 활동이 없습니다.
                     </p>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {searchResults.matchedItems.map(({ item, room }) => (
                         <button
                           key={item.id}
@@ -2125,9 +2079,9 @@ export default function App() {
                           onClick={() =>
                             room ? navigateToRoom(room) : setIsOffCampusOpen(true)
                           }
-                          className="inline-flex items-center gap-2 border border-orange-300 bg-white hover:bg-orange-100 px-3.5 py-2 text-[14px] text-left transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-[4px] border border-[#dcdcdc] bg-white hover:border-[#5aa396] px-2.5 py-1.5 text-[13px] text-left transition-colors"
                         >
-                          <span className="font-extrabold text-[#25574e]">
+                          <span className="font-bold text-[#25574e]">
                             {room
                               ? `${room.buildingShortName} ${room.floorLabel} ${room.name}`
                               : item.rawLocation}
@@ -2135,597 +2089,786 @@ export default function App() {
                           <span className="text-[#444444]">
                             {item.leader} · {item.content}
                           </span>
-                          <ArrowRightIcon className="h-4 w-4 text-orange-600" />
+                          <ArrowRightIcon className="h-3.5 w-3.5 text-[#5aa396]" />
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
               )}
+            </div>
 
-              {/* 3개 건물 캠퍼스 맵 SVG (viewBox 1080x365) */}
-              <div className="relative overflow-hidden border border-[#dcdcdc] bg-gradient-to-b from-[#e4f3f0] via-[#f1f8f6] to-[#e9f2ea] p-3 sm:p-5">
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-25"
-                  style={{
-                    backgroundImage: 'radial-gradient(#76b9ad 1px, transparent 1px)',
-                    backgroundSize: '20px 20px'
-                  }}
+            {/* ================================================================
+                2. 전남과학고등학교 실제 사진 기반 캠퍼스 전체 지도 (SVG 일러스트)
+                   - 붉은 벽돌 외벽 + 아이보리 수평 콘크리트 띠 + 유리창 격자
+                   - 전경 푸른 잔디 운동장, 양쪽 하얀 축구 골대, 계단식 스탠드, 조경수
+               ================================================================ */}
+            <div className="overflow-hidden rounded-[6px] border border-[#dcdcdc] bg-white p-3 sm:p-4">
+              <svg
+                viewBox="0 0 1120 400"
+                className="w-full h-auto select-none"
+                role="img"
+                aria-label="전남과학고등학교 캠퍼스 전경 지도"
+              >
+                <defs>
+                  <linearGradient id="jshs-sky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#cde6f7" />
+                    <stop offset="65%" stopColor="#e8f4fc" />
+                    <stop offset="100%" stopColor="#f6fafd" />
+                  </linearGradient>
+                  <linearGradient id="jshs-turf" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#5a9e43" />
+                    <stop offset="50%" stopColor="#4c8c38" />
+                    <stop offset="100%" stopColor="#3f782d" />
+                  </linearGradient>
+                  <filter id="jshs-hover-glow" x="-6%" y="-6%" width="112%" height="112%">
+                    <feDropShadow
+                      dx="0"
+                      dy="4"
+                      stdDeviation="4"
+                      floodColor="#1e293b"
+                      floodOpacity="0.24"
+                    />
+                  </filter>
+                </defs>
+
+                {/* 하늘 배경 */}
+                <rect x="0" y="0" width="1120" height="275" fill="url(#jshs-sky)" />
+
+                {/* 하늘 구름 (사진처럼 부드럽고 절제된 형태) */}
+                <g fill="#ffffff" opacity="0.82">
+                  <ellipse cx="185" cy="54" rx="52" ry="15" />
+                  <ellipse cx="215" cy="48" rx="36" ry="13" />
+                  <ellipse cx="565" cy="46" rx="68" ry="18" />
+                  <ellipse cx="610" cy="42" rx="44" ry="14" />
+                  <ellipse cx="945" cy="52" rx="56" ry="15" />
+                </g>
+
+                {/* 원경 녹지 능선 */}
+                <path
+                  d="M 0 250 Q 280 238 560 245 T 1120 242 L 1120 278 L 0 278 Z"
+                  fill="#6c9958"
                 />
 
-                <svg
-                  viewBox="0 0 1080 365"
-                  className="relative w-full h-auto select-none"
-                  role="img"
-                  aria-label="전남과학고등학교 캠퍼스 3개 건물 지도"
+                {/* ============================================================
+                    건물 1: 좌측~중앙 성실관 (본관 · 1~4F)
+                    - 좌측 끝 둥근 붉은 벽돌 계단탑(세로 긴 창문)
+                    - 4층 붉은 벽돌 외벽 + 아이보리 수평 콘크리트 띠
+                    - 중앙 돌출 캐노피와 하얀 기둥 열주(Colonnade) 중앙현관
+                   ============================================================ */}
+                <g
+                  onClick={() => handleEnterBuilding('seongsil')}
+                  onMouseEnter={() => setHoveredBuildingId('seongsil')}
+                  onMouseLeave={() => setHoveredBuildingId(null)}
+                  filter={
+                    hoveredBuildingId === 'seongsil'
+                      ? 'url(#jshs-hover-glow)'
+                      : undefined
+                  }
+                  className="cursor-pointer"
                 >
-                  <defs>
-                    <filter id="gwaguri-shadow" x="-15%" y="-15%" width="130%" height="130%">
-                      <feDropShadow
-                        dx="0"
-                        dy="6"
-                        stdDeviation="6"
-                        floodColor="#2d3e40"
-                        floodOpacity="0.18"
-                      />
-                    </filter>
-                  </defs>
-
-                  {/* 캠퍼스 잔디 및 보행로 */}
-                  <rect
-                    x="16"
-                    y="272"
-                    width="1048"
-                    height="82"
-                    rx="14"
-                    fill="#d5ebd8"
-                    opacity="0.9"
-                  />
-                  <path
-                    d="M 70 326 Q 540 310 1010 326"
-                    stroke="#cbd5e1"
-                    strokeWidth="16"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M 70 326 Q 540 310 1010 326"
-                    stroke="#ffffff"
-                    strokeWidth="2"
-                    strokeDasharray="10 10"
-                    fill="none"
-                  />
-
-                  {/* 구름 */}
-                  <g fill="#ffffff" opacity="0.9">
-                    <circle cx="135" cy="40" r="14" />
-                    <circle cx="156" cy="36" r="19" />
-                    <circle cx="178" cy="41" r="13" />
-                    <circle cx="905" cy="38" r="14" />
-                    <circle cx="927" cy="34" r="18" />
-                    <circle cx="947" cy="40" r="13" />
-                  </g>
-
-                  {/* 조경수 */}
-                  {[48, 418, 768, 1032].map((tx, idx) => (
-                    <g key={idx} transform={`translate(${tx}, 276)`}>
-                      <rect x="-4" y="14" width="8" height="18" fill="#854d0e" />
-                      <circle cx="0" cy="8" r="14" fill="#15803d" />
-                      <circle cx="-6" cy="12" r="9" fill="#22c55e" />
-                      <circle cx="6" cy="11" r="10" fill="#16a34a" />
-                    </g>
-                  ))}
-
-                  {/* 2층 본관-창의관 연결 통로 */}
-                  <g>
+                  {/* 상단 상태 라벨 & 건물명 라벨 (단정한 사각형) */}
+                  <g transform="translate(242, 14)">
                     <rect
-                      x="378"
-                      y="206"
-                      width="80"
+                      x="-96"
+                      y="0"
+                      width="192"
                       height="22"
-                      fill="#e6f5f2"
-                      stroke="#5aa396"
-                      strokeWidth="2"
-                    />
-                    <line
-                      x1="386"
-                      y1="217"
-                      x2="450"
-                      y2="217"
-                      stroke="#5aa396"
-                      strokeWidth="2"
-                      strokeDasharray="4 4"
-                    />
-                    <text
-                      x="418"
-                      y="198"
-                      textAnchor="middle"
-                      fontSize="12.5"
-                      fontWeight="800"
-                      fill="#2d3e40"
-                    >
-                      2F 연결통로
-                    </text>
-                  </g>
-
-                  {/* 1) 성실관 (본관) */}
-                  <g
-                    onClick={() => handleEnterBuilding('seongsil')}
-                    onMouseEnter={() => setHoveredBuildingId('seongsil')}
-                    onMouseLeave={() => setHoveredBuildingId(null)}
-                    filter={
-                      hoveredBuildingId === 'seongsil' ? 'url(#gwaguri-shadow)' : undefined
-                    }
-                    className="cursor-pointer transition-transform duration-200"
-                    style={{
-                      transform:
-                        hoveredBuildingId === 'seongsil' ? 'translateY(-4px)' : 'translateY(0)'
-                    }}
-                  >
-                    <polygon points="78,118 230,86 382,118" fill="#2d3e40" />
-                    <rect
-                      x="86"
-                      y="118"
-                      width="288"
-                      height="182"
-                      fill="#ffffff"
-                      stroke={
-                        searchResults.matchedBuildingIds.has('seongsil')
-                          ? '#e87a3d'
-                          : '#58968b'
+                      rx="3"
+                      fill={
+                        buildingStats.seongsil.duplicateRooms.length > 0
+                          ? '#b45309'
+                          : buildingStats.seongsil.teamCount > 0
+                          ? '#498d81'
+                          : '#555555'
                       }
-                      strokeWidth={searchResults.matchedBuildingIds.has('seongsil') ? '5' : '3'}
                     />
-
-                    {[0, 1, 2, 3].map((idx) => {
-                      const y = 127 + idx * 38;
-                      const floorLabel = `${4 - idx}F`;
-                      return (
-                        <g key={idx}>
-                          <rect
-                            x="98"
-                            y={y}
-                            width="264"
-                            height="31"
-                            fill="#f2faf8"
-                            stroke="#bde0d9"
-                            strokeWidth="1.5"
-                          />
-                          <text x="114" y={y + 20} fontSize="13" fontWeight="800" fill="#2d3e40">
-                            {floorLabel}
-                          </text>
-                          {[152, 188, 224, 260, 296, 330].map((wx, wi) => (
-                            <rect
-                              key={wi}
-                              x={wx}
-                              y={y + 6}
-                              width="22"
-                              height="18"
-                              fill="#c3e5de"
-                            />
-                          ))}
-                        </g>
-                      );
-                    })}
-
-                    <rect x="198" y="280" width="64" height="20" fill="#58968b" />
                     <text
-                      x="230"
-                      y="294"
+                      x="0"
+                      y="15"
                       textAnchor="middle"
-                      fontSize="12"
+                      fontSize="11.5"
                       fontWeight="700"
                       fill="#ffffff"
                     >
-                      중앙현관
+                      {buildingStats.seongsil.duplicateRooms.length > 0
+                        ? `중복 ${buildingStats.seongsil.duplicateRooms.length}곳 · ${buildingStats.seongsil.teamCount}팀`
+                        : buildingStats.seongsil.teamCount > 0
+                        ? `${buildingStats.seongsil.teamCount}팀 사용 중`
+                        : '비어 있음'}
                     </text>
 
-                    <rect x="118" y="50" width="224" height="28" rx="14" fill="#2d3e40" />
+                    <rect
+                      x="-96"
+                      y="25"
+                      width="192"
+                      height="25"
+                      rx="3"
+                      fill="#222222"
+                    />
                     <text
-                      x="230"
-                      y="69"
+                      x="0"
+                      y="42"
                       textAnchor="middle"
-                      fontSize="14.5"
-                      fontWeight="800"
+                      fontSize="12.5"
+                      fontWeight="700"
                       fill="#ffffff"
                     >
                       성실관 (본관 · 1~4F)
                     </text>
-
-                    <g transform="translate(230, 24)">
-                      <rect
-                        x="-102"
-                        y="-14"
-                        width="204"
-                        height="24"
-                        rx="12"
-                        fill={
-                          buildingStats.seongsil.duplicateRooms.length > 0
-                            ? '#d97706'
-                            : buildingStats.seongsil.teamCount > 0
-                            ? '#5aa396'
-                            : '#777777'
-                        }
-                      />
-                      <text
-                        x="0"
-                        y="2"
-                        textAnchor="middle"
-                        fontSize="12.5"
-                        fontWeight="700"
-                        fill="#ffffff"
-                      >
-                        {buildingStats.seongsil.duplicateRooms.length > 0
-                          ? `중복 사용실 ${buildingStats.seongsil.duplicateRooms.length}곳 · ${buildingStats.seongsil.teamCount}팀`
-                          : buildingStats.seongsil.teamCount > 0
-                          ? `${buildingStats.seongsil.teamCount}팀 사용 중`
-                          : '현재 비어 있음'}
-                      </text>
-                    </g>
                   </g>
 
-                  {/* 2) 창의관 (실험동) */}
-                  <g
-                    onClick={() => handleEnterBuilding('changui')}
-                    onMouseEnter={() => setHoveredBuildingId('changui')}
-                    onMouseLeave={() => setHoveredBuildingId(null)}
-                    filter={
-                      hoveredBuildingId === 'changui' ? 'url(#gwaguri-shadow)' : undefined
-                    }
-                    className="cursor-pointer transition-transform duration-200"
-                    style={{
-                      transform:
-                        hoveredBuildingId === 'changui' ? 'translateY(-4px)' : 'translateY(0)'
-                    }}
-                  >
-                    <path
-                      d="M 558 112 A 44 30 0 0 1 646 112 Z"
-                      fill="#58968b"
-                      stroke="#2d3e40"
-                      strokeWidth="2"
-                    />
+                  {/* 옥상 기계실(옥탑) */}
+                  <rect x="255" y="96" width="88" height="16" fill="#752e21" />
+                  <rect x="253" y="95" width="92" height="3" fill="#ebe5dc" />
+
+                  {/* 좌측 끝 둥근 벽돌 계단탑 */}
+                  <path
+                    d="M 32 94 Q 54 88 76 94 L 76 254 L 32 254 Z"
+                    fill="#7e3123"
+                    stroke="#592016"
+                    strokeWidth="1"
+                  />
+                  {/* 계단탑 세로 긴 창문 */}
+                  <path
+                    d="M 46 105 A 8 8 0 0 1 62 105 L 62 240 L 46 240 Z"
+                    fill="#2b3842"
+                    stroke="#ebe5dc"
+                    strokeWidth="1.5"
+                  />
+                  <line x1="54" y1="98" x2="54" y2="240" stroke="#5b6d7a" strokeWidth="1" />
+                  {[132, 166, 200].map((wy, i) => (
                     <line
-                      x1="602"
-                      y1="82"
-                      x2="622"
-                      y2="98"
-                      stroke="#c3e5de"
-                      strokeWidth="3"
-                      strokeLinecap="round"
+                      key={i}
+                      x1="46"
+                      y1={wy}
+                      x2="62"
+                      y2={wy}
+                      stroke="#ebe5dc"
+                      strokeWidth="1.5"
                     />
-                    <rect x="468" y="112" width="268" height="15" fill="#2d3e40" />
+                  ))}
+
+                  {/* 본관 좌측~우측 4층 붉은 벽돌 본체 */}
+                  <rect x="76" y="112" width="376" height="142" fill="#8b3a2b" />
+
+                  {/* 수평 아이보리/크림색 콘크리트 띠 (옥상 파라펫 + 층간 띠) */}
+                  <rect x="76" y="112" width="376" height="5" fill="#ebe5dc" />
+                  <rect x="76" y="146" width="376" height="4.5" fill="#ebe5dc" />
+                  <rect x="76" y="180" width="376" height="4.5" fill="#ebe5dc" />
+                  <rect x="76" y="214" width="376" height="4.5" fill="#ebe5dc" />
+
+                  {/* 본관 좌측 교실 창문 격자 (4개 층) */}
+                  {[121, 154, 188, 222].map((wy, rowIdx) => (
+                    <g key={rowIdx}>
+                      {[86, 108, 130, 152, 174, 196, 218].map((wx, colIdx) => (
+                        <g key={colIdx}>
+                          <rect
+                            x={wx}
+                            y={wy}
+                            width="17"
+                            height="21"
+                            fill="#293640"
+                          />
+                          <line
+                            x1={wx + 8.5}
+                            y1={wy}
+                            x2={wx + 8.5}
+                            y2={wy + 21}
+                            stroke="#80929e"
+                            strokeWidth="0.9"
+                          />
+                        </g>
+                      ))}
+                    </g>
+                  ))}
+
+                  {/* 본관 우측 연결부 교실 창문 격자 */}
+                  {[121, 154, 188, 222].map((wy, rowIdx) => (
+                    <g key={rowIdx}>
+                      {[376, 398, 420].map((wx, colIdx) => (
+                        <g key={colIdx}>
+                          <rect
+                            x={wx}
+                            y={wy}
+                            width="17"
+                            height="21"
+                            fill="#293640"
+                          />
+                          <line
+                            x1={wx + 8.5}
+                            y1={wy}
+                            x2={wx + 8.5}
+                            y2={wy + 21}
+                            stroke="#80929e"
+                            strokeWidth="0.9"
+                          />
+                        </g>
+                      ))}
+                    </g>
+                  ))}
+
+                  {/* 중앙 돌출 캐노피 & 하얀 기둥 열주(Colonnade) 중앙현관 입구 */}
+                  <g>
+                    {/* 돌출 상부 벽돌 매스 */}
+                    <rect x="242" y="106" width="126" height="42" fill="#7a2f22" />
+                    <rect x="240" y="105" width="130" height="5" fill="#ebe5dc" />
+                    <rect x="240" y="125" width="130" height="4.5" fill="#ebe5dc" />
+                    <rect x="240" y="144" width="130" height="5" fill="#ebe5dc" />
+
+                    {/* 현관 내부 어두운 홀 & 유리문 */}
+                    <rect x="248" y="149" width="114" height="105" fill="#232d35" />
+                    <rect x="285" y="156" width="40" height="98" fill="#364854" />
+                    <line
+                      x1="305"
+                      y1="156"
+                      x2="305"
+                      y2="254"
+                      stroke="#cbd5e1"
+                      strokeWidth="1.5"
+                    />
+
+                    {/* 하얀색/아이보리 수직 기둥 열주 6개 */}
+                    {[248, 269, 290, 315, 336, 357].map((px, idx) => (
+                      <rect
+                        key={idx}
+                        x={px}
+                        y="149"
+                        width="5.5"
+                        height="105"
+                        fill="#f3efe8"
+                      />
+                    ))}
+                  </g>
+
+                  {/* 호버/검색 하이라이트 테두리 */}
+                  {(hoveredBuildingId === 'seongsil' ||
+                    searchResults.matchedBuildingIds.has('seongsil')) && (
+                    <rect
+                      x="30"
+                      y="88"
+                      width="422"
+                      height="166"
+                      fill="none"
+                      stroke={
+                        searchResults.matchedBuildingIds.has('seongsil')
+                          ? '#d97706'
+                          : '#5aa396'
+                      }
+                      strokeWidth="3"
+                    />
+                  )}
+                </g>
+
+                {/* ============================================================
+                    건물 2: 중앙 우측 창의관 (실험동 · 1~4F+옥상)
+                    - 본관과 L자로 이어지는 4층 붉은 벽돌 실험동
+                    - 중앙 반원형 통유리 커튼월 타워 + 옥상 천문대 돔
+                   ============================================================ */}
+                <g
+                  onClick={() => handleEnterBuilding('changui')}
+                  onMouseEnter={() => setHoveredBuildingId('changui')}
+                  onMouseLeave={() => setHoveredBuildingId(null)}
+                  filter={
+                    hoveredBuildingId === 'changui'
+                      ? 'url(#jshs-hover-glow)'
+                      : undefined
+                  }
+                  className="cursor-pointer"
+                >
+                  {/* 상단 상태 라벨 & 건물명 라벨 */}
+                  <g transform="translate(648, 14)">
+                    <rect
+                      x="-104"
+                      y="0"
+                      width="208"
+                      height="22"
+                      rx="3"
+                      fill={
+                        buildingStats.changui.duplicateRooms.length > 0
+                          ? '#b45309'
+                          : buildingStats.changui.teamCount > 0
+                          ? '#498d81'
+                          : '#555555'
+                      }
+                    />
                     <text
-                      x="602"
-                      y="123"
+                      x="0"
+                      y="15"
                       textAnchor="middle"
-                      fontSize="11"
+                      fontSize="11.5"
                       fontWeight="700"
-                      fill="#c3e5de"
+                      fill="#ffffff"
                     >
-                      옥상 천문대
+                      {buildingStats.changui.duplicateRooms.length > 0
+                        ? `중복 ${buildingStats.changui.duplicateRooms.length}곳 · ${buildingStats.changui.teamCount}팀`
+                        : buildingStats.changui.teamCount > 0
+                        ? `${buildingStats.changui.teamCount}팀 사용 중`
+                        : '비어 있음'}
                     </text>
 
                     <rect
-                      x="458"
-                      y="127"
-                      width="288"
-                      height="173"
-                      fill="#ffffff"
-                      stroke={
-                        searchResults.matchedBuildingIds.has('changui')
-                          ? '#e87a3d'
-                          : '#58968b'
-                      }
-                      strokeWidth={searchResults.matchedBuildingIds.has('changui') ? '5' : '3'}
+                      x="-104"
+                      y="25"
+                      width="208"
+                      height="25"
+                      rx="3"
+                      fill="#222222"
                     />
-
-                    {[
-                      { floor: '4F 화학', color: '#f2faf8' },
-                      { floor: '3F 생물', color: '#f0fdf4' },
-                      { floor: '2F 물리·수학', color: '#e6f5f2' },
-                      { floor: '1F 지구과학', color: '#fefce8' }
-                    ].map((item, idx) => {
-                      const y = 136 + idx * 39;
-                      return (
-                        <g key={idx}>
-                          <rect
-                            x="470"
-                            y={y}
-                            width="264"
-                            height="32"
-                            fill={item.color}
-                            stroke="#bde0d9"
-                            strokeWidth="1.5"
-                          />
-                          <text x="484" y={y + 21} fontSize="13" fontWeight="800" fill="#2d3e40">
-                            {item.floor}
-                          </text>
-                          {[584, 620, 656, 692].map((wx, wi) => (
-                            <rect
-                              key={wi}
-                              x={wx}
-                              y={y + 7}
-                              width="24"
-                              height="18"
-                              fill="#95c9be"
-                              opacity="0.8"
-                            />
-                          ))}
-                        </g>
-                      );
-                    })}
-
-                    <rect x="482" y="42" width="240" height="28" rx="14" fill="#2d3e40" />
                     <text
-                      x="602"
-                      y="61"
+                      x="0"
+                      y="42"
                       textAnchor="middle"
-                      fontSize="14.5"
-                      fontWeight="800"
+                      fontSize="12.5"
+                      fontWeight="700"
                       fill="#ffffff"
                     >
                       창의관 (실험동 · 1~4F+옥상)
                     </text>
-
-                    <g transform="translate(602, 16)">
-                      <rect
-                        x="-106"
-                        y="-14"
-                        width="212"
-                        height="24"
-                        rx="12"
-                        fill={
-                          buildingStats.changui.duplicateRooms.length > 0
-                            ? '#d97706'
-                            : buildingStats.changui.teamCount > 0
-                            ? '#5aa396'
-                            : '#777777'
-                        }
-                      />
-                      <text
-                        x="0"
-                        y="2"
-                        textAnchor="middle"
-                        fontSize="12.5"
-                        fontWeight="700"
-                        fill="#ffffff"
-                      >
-                        {buildingStats.changui.duplicateRooms.length > 0
-                          ? `중복 사용실 ${buildingStats.changui.duplicateRooms.length}곳 · ${buildingStats.changui.teamCount}팀`
-                          : buildingStats.changui.teamCount > 0
-                          ? `${buildingStats.changui.teamCount}팀 사용 중`
-                          : '현재 비어 있음'}
-                      </text>
-                    </g>
                   </g>
 
-                  {/* 3) 성취관 (강당) */}
-                  <g
-                    onClick={() => handleEnterBuilding('seongchwi')}
-                    onMouseEnter={() => setHoveredBuildingId('seongchwi')}
-                    onMouseLeave={() => setHoveredBuildingId(null)}
-                    filter={
-                      hoveredBuildingId === 'seongchwi' ? 'url(#gwaguri-shadow)' : undefined
-                    }
-                    className="cursor-pointer transition-transform duration-200"
-                    style={{
-                      transform:
-                        hoveredBuildingId === 'seongchwi' ? 'translateY(-4px)' : 'translateY(0)'
-                    }}
-                  >
-                    <path d="M 790 170 Q 902 126 1014 170 Z" fill="#2d3e40" />
+                  {/* 옥상 천문대 돔 & 옥탑 기계실 */}
+                  <rect x="692" y="92" width="66" height="18" fill="#68261b" />
+                  <path
+                    d="M 556 112 A 24 18 0 0 1 604 112 Z"
+                    fill="#dce4e8"
+                    stroke="#64748b"
+                    strokeWidth="1.5"
+                  />
+                  <line
+                    x1="580"
+                    y1="94"
+                    x2="591"
+                    y2="104"
+                    stroke="#475569"
+                    strokeWidth="2"
+                  />
+
+                  {/* 좌측 연결 타워 기둥부 */}
+                  <rect x="466" y="116" width="44" height="138" fill="#752e21" />
+                  {[128, 160, 192, 224].map((wy, i) => (
                     <rect
-                      x="796"
-                      y="170"
-                      width="212"
-                      height="130"
-                      fill="#ffffff"
+                      key={i}
+                      x="480"
+                      y={wy}
+                      width="14"
+                      height="18"
+                      fill="#293640"
+                    />
+                  ))}
+
+                  {/* 창의관 메인 4층 붉은 벽돌 본체 */}
+                  <rect x="510" y="110" width="322" height="144" fill="#853526" />
+                  <rect x="510" y="110" width="322" height="4.5" fill="#ebe5dc" />
+                  <rect x="510" y="145" width="322" height="3.5" fill="#ebe5dc" />
+                  <rect x="510" y="180" width="322" height="3.5" fill="#ebe5dc" />
+                  <rect x="510" y="215" width="322" height="3.5" fill="#ebe5dc" />
+
+                  {/* 창의관 좌측 윙 창문 */}
+                  {[121, 155, 190, 224].map((wy, rIdx) => (
+                    <g key={rIdx}>
+                      {[524, 550, 576].map((wx, cIdx) => (
+                        <rect
+                          key={cIdx}
+                          x={wx}
+                          y={wy}
+                          width="15"
+                          height="18"
+                          fill="#293640"
+                        />
+                      ))}
+                    </g>
+                  ))}
+
+                  {/* 중앙 반원형 통유리 커튼월 타워 (사진 속 원통형 유리 코어) */}
+                  <g>
+                    <rect
+                      x="606"
+                      y="114"
+                      width="46"
+                      height="140"
+                      fill="#31414d"
+                      stroke="#cbd5e1"
+                      strokeWidth="1.5"
+                    />
+                    {/* 수직 유리 멀리언 */}
+                    <line
+                      x1="621"
+                      y1="114"
+                      x2="621"
+                      y2="254"
+                      stroke="#94a3b8"
+                      strokeWidth="1.2"
+                    />
+                    <line
+                      x1="637"
+                      y1="114"
+                      x2="637"
+                      y2="254"
+                      stroke="#94a3b8"
+                      strokeWidth="1.2"
+                    />
+                    {/* 수평 스팬드럴(아이보리 띠) */}
+                    {[132, 166, 200, 232].map((cy, idx) => (
+                      <rect
+                        key={idx}
+                        x="606"
+                        y={cy}
+                        width="46"
+                        height="5"
+                        fill="#e2e8f0"
+                      />
+                    ))}
+                  </g>
+
+                  {/* 창의관 우측 윙 창문 */}
+                  {[121, 155, 190, 224].map((wy, rIdx) => (
+                    <g key={rIdx}>
+                      {[668, 696, 724, 752, 780, 804].map((wx, cIdx) => (
+                        <rect
+                          key={cIdx}
+                          x={wx}
+                          y={wy}
+                          width="15"
+                          height="18"
+                          fill="#293640"
+                        />
+                      ))}
+                    </g>
+                  ))}
+
+                  {/* 호버/검색 하이라이트 테두리 */}
+                  {(hoveredBuildingId === 'changui' ||
+                    searchResults.matchedBuildingIds.has('changui')) && (
+                    <rect
+                      x="466"
+                      y="110"
+                      width="366"
+                      height="144"
+                      fill="none"
                       stroke={
-                        searchResults.matchedBuildingIds.has('seongchwi')
-                          ? '#e87a3d'
-                          : '#58968b'
+                        searchResults.matchedBuildingIds.has('changui')
+                          ? '#d97706'
+                          : '#5aa396'
                       }
-                      strokeWidth={searchResults.matchedBuildingIds.has('seongchwi') ? '5' : '3'}
+                      strokeWidth="3"
                     />
+                  )}
+                </g>
 
+                {/* ============================================================
+                    건물 3: 우측 성취관 (강당 · 1~2F)
+                    - 동일한 붉은 벽돌 + 아이보리 콘크리트 띠 건축 양식
+                    - 완만한 아치형 지붕, 2F 체육관 창문, 1F 예체능실 창문
+                   ============================================================ */}
+                <g
+                  onClick={() => handleEnterBuilding('seongchwi')}
+                  onMouseEnter={() => setHoveredBuildingId('seongchwi')}
+                  onMouseLeave={() => setHoveredBuildingId(null)}
+                  filter={
+                    hoveredBuildingId === 'seongchwi'
+                      ? 'url(#jshs-hover-glow)'
+                      : undefined
+                  }
+                  className="cursor-pointer"
+                >
+                  {/* 상단 상태 라벨 & 건물명 라벨 */}
+                  <g transform="translate(976, 66)">
                     <rect
-                      x="808"
-                      y="181"
-                      width="188"
-                      height="49"
-                      fill="#f2faf8"
-                      stroke="#bde0d9"
-                      strokeWidth="1.5"
+                      x="-92"
+                      y="0"
+                      width="184"
+                      height="22"
+                      rx="3"
+                      fill={
+                        buildingStats.seongchwi.duplicateRooms.length > 0
+                          ? '#b45309'
+                          : buildingStats.seongchwi.teamCount > 0
+                          ? '#498d81'
+                          : '#555555'
+                      }
                     />
                     <text
-                      x="902"
-                      y="203"
-                      textAnchor="middle"
-                      fontSize="14"
-                      fontWeight="800"
-                      fill="#2d3e40"
-                    >
-                      2F 체육관
-                    </text>
-                    <text
-                      x="902"
-                      y="221"
+                      x="0"
+                      y="15"
                       textAnchor="middle"
                       fontSize="11.5"
-                      fontWeight="600"
-                      fill="#58968b"
+                      fontWeight="700"
+                      fill="#ffffff"
                     >
-                      다목적 실내 코트
+                      {buildingStats.seongchwi.duplicateRooms.length > 0
+                        ? `중복 ${buildingStats.seongchwi.duplicateRooms.length}곳 · ${buildingStats.seongchwi.teamCount}팀`
+                        : buildingStats.seongchwi.teamCount > 0
+                        ? `${buildingStats.seongchwi.teamCount}팀 사용 중`
+                        : '비어 있음'}
                     </text>
 
                     <rect
-                      x="808"
-                      y="239"
-                      width="188"
-                      height="50"
-                      fill="#fafafa"
-                      stroke="#dcdcdc"
-                      strokeWidth="1.5"
+                      x="-92"
+                      y="25"
+                      width="184"
+                      height="25"
+                      rx="3"
+                      fill="#222222"
                     />
                     <text
-                      x="902"
-                      y="261"
+                      x="0"
+                      y="42"
                       textAnchor="middle"
-                      fontSize="13.5"
-                      fontWeight="800"
-                      fill="#2d3e40"
-                    >
-                      1F 예체능실
-                    </text>
-                    <text
-                      x="902"
-                      y="279"
-                      textAnchor="middle"
-                      fontSize="11.5"
-                      fontWeight="600"
-                      fill="#666666"
-                    >
-                      음악 · 피아노 · 기악 · 미술 · 탁구
-                    </text>
-
-                    <rect x="802" y="96" width="200" height="28" rx="14" fill="#2d3e40" />
-                    <text
-                      x="902"
-                      y="115"
-                      textAnchor="middle"
-                      fontSize="14.5"
-                      fontWeight="800"
+                      fontSize="12.5"
+                      fontWeight="700"
                       fill="#ffffff"
                     >
                       성취관 (강당 · 1~2F)
                     </text>
-
-                    <g transform="translate(902, 70)">
-                      <rect
-                        x="-98"
-                        y="-14"
-                        width="196"
-                        height="24"
-                        rx="12"
-                        fill={
-                          buildingStats.seongchwi.duplicateRooms.length > 0
-                            ? '#d97706'
-                            : buildingStats.seongchwi.teamCount > 0
-                            ? '#5aa396'
-                            : '#777777'
-                        }
-                      />
-                      <text
-                        x="0"
-                        y="2"
-                        textAnchor="middle"
-                        fontSize="12.5"
-                        fontWeight="700"
-                        fill="#ffffff"
-                      >
-                        {buildingStats.seongchwi.duplicateRooms.length > 0
-                          ? `중복 사용실 ${buildingStats.seongchwi.duplicateRooms.length}곳 · ${buildingStats.seongchwi.teamCount}팀`
-                          : buildingStats.seongchwi.teamCount > 0
-                          ? `${buildingStats.seongchwi.teamCount}팀 사용 중`
-                          : '현재 비어 있음'}
-                      </text>
-                    </g>
                   </g>
-                </svg>
-              </div>
 
-              {/* 하단: 3개 건물 요약 카드 + 층별 바로가기 버튼 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-                {BUILDINGS.map((b) => {
-                  const st = buildingStats[b.id];
-                  const dupCount = st.duplicateRooms.length;
-                  return (
-                    <div
-                      key={b.id}
-                      className={`flex flex-col justify-between border bg-white p-5 transition-colors ${
-                        dupCount > 0 ? 'border-amber-300' : 'border-[#dcdcdc]'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="text-[17px] font-extrabold text-[#222222]">
-                            {b.name}
-                          </h3>
-                          <span
-                            className={`px-2.5 py-0.5 text-[12px] font-extrabold ${
-                              dupCount > 0
-                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                : st.teamCount > 0
-                                ? 'bg-[#e6f5f2] text-[#25574e] border border-[#6cb5a8]'
-                                : 'bg-[#f4f4f4] text-[#777777]'
-                            }`}
-                          >
-                            {dupCount > 0
-                              ? `중복 ${dupCount}곳 · ${st.teamCount}팀`
+                  {/* 완만한 아치형 지붕 */}
+                  <path
+                    d="M 862 154 Q 976 126 1090 154 Z"
+                    fill="#5c2419"
+                  />
+                  <path
+                    d="M 862 154 Q 976 126 1090 154"
+                    fill="none"
+                    stroke="#ebe5dc"
+                    strokeWidth="3.5"
+                  />
+
+                  {/* 성취관 2층 붉은 벽돌 외벽 */}
+                  <rect x="866" y="154" width="220" height="100" fill="#853526" />
+                  <rect x="866" y="203" width="220" height="4" fill="#ebe5dc" />
+
+                  {/* 2F 체육관 고창 */}
+                  {[884, 916, 948, 980, 1012, 1044].map((wx, idx) => (
+                    <rect
+                      key={idx}
+                      x={wx}
+                      y="167"
+                      width="22"
+                      height="22"
+                      fill="#293640"
+                    />
+                  ))}
+
+                  {/* 1F 예체능실 창문 및 출입구 */}
+                  {[884, 916, 1012, 1044].map((wx, idx) => (
+                    <rect
+                      key={idx}
+                      x={wx}
+                      y="216"
+                      width="22"
+                      height="22"
+                      fill="#293640"
+                    />
+                  ))}
+                  <rect x="954" y="216" width="44" height="38" fill="#232d35" />
+                  <line
+                    x1="976"
+                    y1="216"
+                    x2="976"
+                    y2="254"
+                    stroke="#ebe5dc"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* 호버/검색 하이라이트 테두리 */}
+                  {(hoveredBuildingId === 'seongchwi' ||
+                    searchResults.matchedBuildingIds.has('seongchwi')) && (
+                    <rect
+                      x="864"
+                      y="150"
+                      width="224"
+                      height="104"
+                      fill="none"
+                      stroke={
+                        searchResults.matchedBuildingIds.has('seongchwi')
+                          ? '#d97706'
+                          : '#5aa396'
+                      }
+                      strokeWidth="3"
+                    />
+                  )}
+                </g>
+
+                {/* ============================================================
+                    전경: 벽돌 계단식 스탠드 + 조경수 + 푸른 잔디 운동장 + 축구 골대
+                   ============================================================ */}
+                {/* 건물 앞 붉은 벽돌 계단식 스탠드 */}
+                <rect x="95" y="254" width="995" height="13" fill="#8b4232" />
+                <line x1="95" y1="258" x2="1090" y2="258" stroke="#662b1f" strokeWidth="1.2" />
+                <line x1="95" y1="262" x2="1090" y2="262" stroke="#662b1f" strokeWidth="1.2" />
+
+                {/* 푸른 잔디 운동장 바닥 */}
+                <polygon
+                  points="135,267 1120,267 1120,400 185,400"
+                  fill="url(#jshs-turf)"
+                />
+                {/* 잔디 깎기 세로 줄무늬 효과 */}
+                {[260, 390, 520, 650, 780, 910].map((gx, idx) => (
+                  <polygon
+                    key={idx}
+                    points={`${gx},267 ${gx + 65},267 ${gx + 85},400 ${gx + 20},400`}
+                    fill="#ffffff"
+                    opacity="0.06"
+                  />
+                ))}
+
+                {/* 운동장 하얀 라인 */}
+                <polygon
+                  points="245,278 1065,278 1015,388 315,388"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="2"
+                  opacity="0.75"
+                />
+                <line
+                  x1="655"
+                  y1="278"
+                  x2="665"
+                  y2="388"
+                  stroke="#ffffff"
+                  strokeWidth="2"
+                  opacity="0.75"
+                />
+
+                {/* 좌측 & 우측 하얀 축구 골대 (실제 사진의 양쪽 골대 반영) */}
+                <g stroke="#ffffff" strokeWidth="2.5" fill="none">
+                  {/* 좌측 골대 */}
+                  <polygon
+                    points="385,295 495,303 495,358 385,346"
+                    fill="#ffffff"
+                    fillOpacity="0.14"
+                  />
+                  <polyline points="385,295 362,301 362,348 385,346" strokeWidth="1.5" />
+
+                  {/* 우측 골대 */}
+                  <rect
+                    x="865"
+                    y="246"
+                    width="88"
+                    height="26"
+                    fill="#ffffff"
+                    fillOpacity="0.16"
+                  />
+                </g>
+
+                {/* 좌측 보도블록 산책로 & 조경 관목/수목 */}
+                <polygon points="0,275 135,267 185,400 0,400" fill="#dcd7ce" />
+                <path
+                  d="M 0 288 Q 115 315 165 400"
+                  fill="none"
+                  stroke="#4d8237"
+                  strokeWidth="18"
+                />
+
+                {/* 본관 앞 단정하게 전정된 조경수 */}
+                {[115, 195, 225, 425, 455, 575, 765, 845, 1045].map((tx, idx) => (
+                  <g key={idx} transform={`translate(${tx}, 256)`}>
+                    <ellipse cx="0" cy="4" rx="18" ry="10" fill="#3a6b27" />
+                    <ellipse cx="-6" cy="2" rx="12" ry="8" fill="#4f8c37" />
+                    <ellipse cx="7" cy="3" rx="11" ry="7" fill="#437a2e" />
+                  </g>
+                ))}
+                {/* 좌측 포인트 교목 */}
+                <g transform="translate(175, 232)">
+                  <rect x="-2" y="14" width="4" height="22" fill="#5c3a21" />
+                  <circle cx="0" cy="6" r="16" fill="#3f7829" />
+                  <circle cx="-8" cy="11" r="11" fill="#4e8f35" />
+                  <circle cx="8" cy="10" r="11" fill="#386b24" />
+                </g>
+              </svg>
+            </div>
+
+            {/* 하단: 3개 건물 요약 카드 + 층별 바로가기 버튼 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {BUILDINGS.map((b) => {
+                const st = buildingStats[b.id];
+                const dupCount = st.duplicateRooms.length;
+                return (
+                  <div
+                    key={b.id}
+                    className={`flex flex-col justify-between rounded-[6px] border bg-white p-4 transition-colors ${
+                      dupCount > 0 ? 'border-[#f59e0b]' : 'border-[#dcdcdc]'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-[16px] font-bold text-[#111111]">
+                          {b.name}
+                        </h3>
+                        <span
+                          className={`rounded-[4px] px-2 py-0.5 text-[12px] font-bold ${
+                            dupCount > 0
+                              ? 'bg-[#fef3c7] text-[#92400e] border border-[#f59e0b]'
                               : st.teamCount > 0
-                              ? `${st.teamCount}팀 사용 중`
-                              : '여유'}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-[14px] text-[#666666] leading-relaxed">
-                          {b.subtitle}
-                        </p>
-
-                        {/* 층별 빠른 이동 버튼 */}
-                        <div className="mt-3.5 flex flex-wrap gap-1.5">
-                          {b.floors.map((f) => {
-                            const fStat = st.floorStats[f.id];
-                            return (
-                              <button
-                                key={f.id}
-                                type="button"
-                                onClick={() => navigateToFloor(b.id, f.id)}
-                                className={`inline-flex items-center gap-1 border px-2.5 py-1 text-[12.5px] font-bold transition-colors ${
-                                  fStat?.hasDup
-                                    ? 'border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100'
-                                    : fStat?.teamCount > 0
-                                    ? 'border-[#6cb5a8] bg-[#e6f5f2] text-[#25574e] hover:bg-[#cdebe5]'
-                                    : 'border-[#dcdcdc] bg-[#fafafa] text-[#555555] hover:bg-[#efefef]'
-                                }`}
-                              >
-                                <span>{f.label}</span>
-                                {fStat?.teamCount > 0 && (
-                                  <span className="font-extrabold">
-                                    ({fStat.teamCount})
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
+                              ? 'bg-[#eef8f6] text-[#25574e] border border-[#6cb5a8]'
+                              : 'bg-[#f4f4f4] text-[#666666]'
+                          }`}
+                        >
+                          {dupCount > 0
+                            ? `중복 ${dupCount}곳 · ${st.teamCount}팀`
+                            : st.teamCount > 0
+                            ? `${st.teamCount}팀 사용 중`
+                            : '비어 있음'}
+                        </span>
                       </div>
+                      <p className="mt-1.5 text-[13px] text-[#666666] leading-relaxed">
+                        {b.subtitle}
+                      </p>
 
-                      <button
-                        type="button"
-                        onClick={() => handleEnterBuilding(b.id)}
-                        className="mt-4 flex w-full items-center justify-center gap-1.5 border border-[#2d3e40] bg-[#2d3e40] hover:bg-[#5aa396] hover:border-[#5aa396] py-2.5 text-[14px] font-bold text-white transition-colors"
-                      >
-                        <span>{b.shortName} 층별 평면도 보기</span>
-                        <ArrowRightIcon className="h-4 w-4" />
-                      </button>
+                      {/* 층별 바로가기 버튼 */}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {b.floors.map((f) => {
+                          const fStat = st.floorStats[f.id];
+                          return (
+                            <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => navigateToFloor(b.id, f.id)}
+                              className={`inline-flex items-center gap-1 rounded-[4px] border px-2.5 py-1 text-[12.5px] font-bold transition-colors ${
+                                fStat?.hasDup
+                                  ? 'border-[#f59e0b] bg-[#fffbeb] text-[#92400e] hover:bg-[#fef3c7]'
+                                  : fStat?.teamCount > 0
+                                  ? 'border-[#6cb5a8] bg-[#eef8f6] text-[#25574e] hover:bg-[#d6efe9]'
+                                  : 'border-[#dcdcdc] bg-[#fafafa] text-[#555555] hover:bg-[#efefef]'
+                              }`}
+                            >
+                              <span>{f.label}</span>
+                              {fStat?.teamCount > 0 && (
+                                <span>({fStat.teamCount})</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleEnterBuilding(b.id)}
+                      className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-[4px] bg-[#2d3e40] hover:bg-[#5aa396] py-2 text-[13.5px] font-bold text-white transition-colors"
+                    >
+                      <span>{b.shortName} 층별 평면도 보기</span>
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : (
           /* ==================================================================
-             [건물 내부 뷰] 좌측 2단 블록 그리드 평면도 + 우측 실 상세 정보 패널
+             [건물 내부 뷰] 좌측 2단 블록 그리드 평면도 + 우측 과구리 표 상세 패널
              ================================================================== */
-          <div className="space-y-5">
-            {/* 상단 네비게이션 바: 캠퍼스 전체지도 복귀 + 건물 탭 + 날짜 이동 */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border border-[#dcdcdc] bg-white px-4 sm:px-5 py-3.5">
+          <div className="space-y-4">
+            {/* 상단 네비게이션 바: ← 캠퍼스 전체지도 + 건물 전환 탭 + 날짜 이동 */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[6px] border border-[#dcdcdc] bg-white px-4 py-3">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setViewMode('overview')}
-                  className="inline-flex items-center gap-1.5 border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] px-3.5 py-2 text-[14px] font-extrabold text-[#333333] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] px-3 py-1.5 text-[13.5px] font-bold text-[#222222] transition-colors"
                 >
                   <ArrowLeftIcon className="h-4 w-4 text-[#5aa396]" />
                   <span>캠퍼스 전체지도</span>
@@ -2741,19 +2884,19 @@ export default function App() {
                       key={b.id}
                       type="button"
                       onClick={() => handleEnterBuilding(b.id)}
-                      className={`inline-flex items-center gap-1.5 border px-3.5 py-2 text-[14px] font-extrabold transition-colors ${
+                      className={`inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[13.5px] font-bold transition-colors ${
                         isCurrent
-                          ? 'border-[#5aa396] bg-[#6cb5a8] text-white'
-                          : 'border-[#dcdcdc] bg-white text-[#444444] hover:bg-[#f2f2f2]'
+                          ? 'border-[#5aa396] bg-[#5aa396] text-white'
+                          : 'border-[#dcdcdc] bg-white text-[#444444] hover:bg-[#f5f5f5]'
                       }`}
                     >
                       <span>{b.name}</span>
                       {dupCount > 0 && (
                         <span
-                          className={`px-1.5 py-0.5 text-[11px] font-extrabold ${
+                          className={`rounded-[3px] px-1.5 py-0.2 text-[11px] font-bold ${
                             isCurrent
-                              ? 'bg-white text-amber-800'
-                              : 'bg-amber-100 text-amber-900 border border-amber-300'
+                              ? 'bg-white text-[#92400e]'
+                              : 'bg-[#fef3c7] text-[#92400e] border border-[#f59e0b]'
                           }`}
                         >
                           중복 {dupCount}
@@ -2764,21 +2907,21 @@ export default function App() {
                 })}
               </div>
 
-              {/* 우측: 건물 내부에서도 날짜 전환 가능 */}
-              <div className="relative flex items-center gap-2.5">
+              {/* 우측: 날짜 전환 */}
+              <div className="relative flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handlePrevDay}
                   disabled={isToday}
                   aria-label="이전 날짜"
-                  className={`flex h-8 w-8 items-center justify-center rounded-full bg-[#e87a3d] hover:bg-[#d6692d] text-white transition-colors ${
+                  className={`flex h-7 w-7 items-center justify-center rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] text-[#333333] ${
                     isToday ? 'invisible pointer-events-none' : 'visible'
                   }`}
                 >
                   <ChevronLeftIcon className="h-4 w-4" />
                 </button>
 
-                <span className="text-[15px] sm:text-[16px] font-extrabold text-[#222222]">
+                <span className="text-[15px] font-bold text-[#111111]">
                   {formatShortKoreanDate(selectedDate)}
                 </span>
 
@@ -2786,7 +2929,7 @@ export default function App() {
                   type="button"
                   onClick={handleNextDay}
                   aria-label="다음 날짜"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e87a3d] hover:bg-[#d6692d] text-white transition-colors"
+                  className="flex h-7 w-7 items-center justify-center rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] hover:bg-[#efefef] text-[#333333]"
                 >
                   <ChevronRightIcon className="h-4 w-4" />
                 </button>
@@ -2794,17 +2937,17 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsCalendarOpen((prev) => !prev)}
-                  className="ml-1 inline-flex items-center gap-1.5 border border-[#dcdcdc] bg-[#fafafa] hover:border-[#6cb5a8] px-3 py-1.5 text-[14px] font-bold text-[#333333]"
+                  className="ml-1 inline-flex items-center gap-1 rounded-[4px] border border-[#dcdcdc] bg-white hover:bg-[#f5f5f5] px-2.5 py-1 text-[13px] font-bold text-[#222222]"
                 >
-                  <CalendarIcon className="h-4 w-4 text-[#5aa396]" />
+                  <CalendarIcon className="h-3.5 w-3.5 text-[#5aa396]" />
                   <span>달력</span>
                 </button>
 
                 {isCalendarOpen && (
-                  <SamsungCalendarPopover
+                  <MonthlyCalendarPopover
                     selectedDate={selectedDate}
                     todayDate={TODAY_STR}
-                    datesWithData={datesWithData}
+                    dateCountMap={dateCountMap}
                     onSelectDate={(newDate) => setSelectedDate(newDate)}
                     onClose={() => setIsCalendarOpen(false)}
                   />
@@ -2812,16 +2955,14 @@ export default function App() {
               </div>
             </div>
 
-            {/* 2열 메인 그리드: 좌측(8/12) 2단 블록 평면도 + 우측(4/12) 상세 패널 */}
+            {/* 2열 메인 그리드: 좌측(8/12) 2단 블록 평면도 + 우측(4/12) 과구리 표 상세 패널 */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-              {/* ============================================================
-                  좌측 영역: 층 선택 + 2단 블록 그리드 평면도 (lg:col-span-8)
-                 ============================================================ */}
-              <div className="lg:col-span-8 border border-[#dcdcdc] bg-white p-5 sm:p-6 space-y-5">
+              {/* 좌측 영역: 층 선택 + 2단 블록 그리드 평면도 */}
+              <div className="lg:col-span-8 rounded-[6px] border border-[#dcdcdc] bg-white p-5 space-y-4">
                 {/* 층 선택 탭 & 상태 범례 */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eeeeee] pb-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 pr-1 text-[14px] font-extrabold text-[#555555]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eeeeee] pb-3.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 pr-1 text-[13.5px] font-bold text-[#555555]">
                       <LayersIcon className="h-4 w-4 text-[#5aa396]" />
                       층 선택:
                     </span>
@@ -2845,7 +2986,7 @@ export default function App() {
                           key={floor.id}
                           type="button"
                           onClick={() => navigateToFloor(activeBuilding.id, floor.id)}
-                          className={`inline-flex items-center gap-1.5 border px-3.5 py-2 text-[14px] font-extrabold transition-colors ${
+                          className={`inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[13.5px] font-bold transition-colors ${
                             isFloorSelected
                               ? 'border-[#2d3e40] bg-[#2d3e40] text-white'
                               : 'border-[#dcdcdc] bg-[#fafafa] text-[#333333] hover:bg-[#efefef]'
@@ -2853,15 +2994,15 @@ export default function App() {
                         >
                           <span>{floor.label}</span>
                           {hasDup ? (
-                            <span className="bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[11px] font-extrabold">
+                            <span className="rounded-[3px] bg-[#fbbf24] text-[#78350f] px-1.5 py-0.2 text-[11px] font-bold">
                               {teamCount}팀 중복
                             </span>
                           ) : teamCount > 0 ? (
                             <span
-                              className={`px-1.5 py-0.5 text-[11px] font-bold ${
+                              className={`rounded-[3px] px-1.5 py-0.2 text-[11px] font-bold ${
                                 isFloorSelected
-                                  ? 'bg-[#6cb5a8] text-white'
-                                  : 'bg-[#e6f5f2] text-[#25574e]'
+                                  ? 'bg-[#5aa396] text-white'
+                                  : 'bg-[#eef8f6] text-[#25574e]'
                               }`}
                             >
                               {teamCount}팀
@@ -2873,17 +3014,17 @@ export default function App() {
                   </div>
 
                   {/* 상태 범례 */}
-                  <div className="flex flex-wrap items-center gap-3.5 text-[13px]">
+                  <div className="flex flex-wrap items-center gap-3 text-[12.5px]">
                     <span className="inline-flex items-center gap-1.5 text-[#666666]">
-                      <span className="h-3 w-3 border border-[#cccccc] bg-white" />
+                      <span className="h-3 w-3 rounded-[2px] border border-[#cccccc] bg-white" />
                       비어 있음
                     </span>
-                    <span className="inline-flex items-center gap-1.5 font-semibold text-[#25574e]">
-                      <span className="h-3 w-3 border border-[#6cb5a8] bg-[#e6f5f2]" />
+                    <span className="inline-flex items-center gap-1.5 font-medium text-[#25574e]">
+                      <span className="h-3 w-3 rounded-[2px] border border-[#6cb5a8] bg-[#eef8f6]" />
                       1팀 사용 중
                     </span>
-                    <span className="inline-flex items-center gap-1.5 font-semibold text-amber-900">
-                      <span className="h-3 w-3 border border-amber-400 bg-amber-100" />
+                    <span className="inline-flex items-center gap-1.5 font-medium text-[#92400e]">
+                      <span className="h-3 w-3 rounded-[2px] border border-[#f59e0b] bg-[#fef3c7]" />
                       2팀 이상 중복
                     </span>
                   </div>
@@ -2891,38 +3032,38 @@ export default function App() {
 
                 {/* 현재 층 제목 */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="bg-[#5aa396] px-3 py-1 text-[13px] font-extrabold text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-[4px] bg-[#5aa396] px-2.5 py-1 text-[12.5px] font-bold text-white">
                       {activeBuilding.shortName} · {activeFloor.label}
                     </span>
-                    <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[#222222]">
+                    <h2 className="text-[18px] font-bold text-[#111111]">
                       {activeFloor.subject}
                     </h2>
                   </div>
-                  <span className="text-[13px] text-[#777777]">
-                    실을 클릭하면 우측 패널에 상세 명단이 표시됩니다
+                  <span className="text-[12.5px] text-[#777777]">
+                    실을 클릭하면 우측 패널에 과구리 탐활서 표가 표시됩니다
                   </span>
                 </div>
 
-                {/* 2단 블록 그리드 평면도 본문 (상단 구역 / 중앙 복도 바 / 하단 구역) */}
-                <div className="space-y-4 border border-[#cccccc] bg-[#f7f7f7] p-4 sm:p-5">
+                {/* 2단 블록 그리드 평면도 본문 */}
+                <div className="space-y-3.5 rounded-[4px] border border-[#cccccc] bg-[#f7f7f7] p-4">
                   {/* 1. 상단 구역 */}
                   {activeFloor.topRooms && activeFloor.topRooms.length > 0 && (
                     <div className="space-y-2">
                       {activeFloor.topLabel && (
-                        <p className="text-[13px] font-extrabold text-[#555555]">
+                        <p className="text-[12.5px] font-bold text-[#555555]">
                           ▲ {activeFloor.topLabel}
                         </p>
                       )}
                       <div
-                        className={`grid gap-3 ${getGridColsClass(
+                        className={`grid gap-2.5 ${getGridColsClass(
                           activeFloor.topCols || 3
                         )}`}
                       >
                         {activeFloor.topRooms.map((room) =>
                           renderRoomTile(
                             room,
-                            activeFloor.topCols === 1 ? 'min-h-[150px]' : 'min-h-[120px]'
+                            activeFloor.topCols === 1 ? 'min-h-[140px]' : 'min-h-[112px]'
                           )
                         )}
                       </div>
@@ -2930,14 +3071,14 @@ export default function App() {
                   )}
 
                   {/* 2. 중앙 복도 바 */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border border-[#d6d6d6] bg-[#eaeaea] px-4 py-2.5 text-[13px] sm:text-[14px] font-bold text-[#555555]">
-                    <span className="mx-auto sm:mx-0">{activeFloor.corridorLabel}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-[4px] border border-[#d6d6d6] bg-[#eaeaea] px-3.5 py-2 text-[13px] font-bold text-[#555555]">
+                    <span>{activeFloor.corridorLabel}</span>
 
                     {activeFloor.hasBridgeToChangui && (
                       <button
                         type="button"
                         onClick={() => navigateToFloor('changui', '2F')}
-                        className="border border-[#5aa396] bg-[#e6f5f2] px-3 py-1 text-[13px] font-extrabold text-[#25574e] hover:bg-[#cdebe5] transition-colors"
+                        className="rounded-[4px] border border-[#5aa396] bg-[#eef8f6] px-2.5 py-1 text-[12.5px] font-bold text-[#25574e] hover:bg-[#d6efe9] transition-colors"
                       >
                         창의관 2층 연결통로 이동 →
                       </button>
@@ -2948,17 +3089,17 @@ export default function App() {
                   {activeFloor.bottomRooms && activeFloor.bottomRooms.length > 0 && (
                     <div className="space-y-2">
                       {activeFloor.bottomLabel && (
-                        <p className="text-[13px] font-extrabold text-[#555555]">
+                        <p className="text-[12.5px] font-bold text-[#555555]">
                           ▼ {activeFloor.bottomLabel}
                         </p>
                       )}
                       <div
-                        className={`grid gap-3 ${getGridColsClass(
+                        className={`grid gap-2.5 ${getGridColsClass(
                           activeFloor.bottomCols || 3
                         )}`}
                       >
                         {activeFloor.bottomRooms.map((room) =>
-                          renderRoomTile(room, 'min-h-[116px]')
+                          renderRoomTile(room, 'min-h-[110px]')
                         )}
                       </div>
                     </div>
@@ -2967,34 +3108,34 @@ export default function App() {
               </div>
 
               {/* ============================================================
-                  우측 영역: 선택한 실(Room) 상세 정보 패널 (lg:col-span-4)
+                  우측 영역: 실제 과구리 '탐활서 확인' 2열 테이블 디자인 상세 패널
                  ============================================================ */}
-              <aside className="lg:col-span-4 border border-[#dcdcdc] bg-white p-5 sm:p-6 space-y-4 lg:sticky lg:top-5">
+              <aside className="lg:col-span-4 rounded-[6px] border border-[#dcdcdc] bg-white p-5 space-y-4 lg:sticky lg:top-5">
                 {activeRoom ? (
                   <>
-                    <div className="border-b border-[#eeeeee] pb-4 space-y-2">
-                      <p className="text-[13px] font-bold text-[#5aa396]">
+                    <div className="border-b border-[#eeeeee] pb-3.5 space-y-1.5">
+                      <p className="text-[12.5px] font-bold text-[#5aa396]">
                         {activeRoom.buildingName} &gt; {activeRoom.floorLabel}
                       </p>
 
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <h3 className="text-[20px] sm:text-[22px] font-extrabold text-[#222222] leading-tight">
+                          <h3 className="text-[19px] font-bold text-[#111111] leading-tight">
                             {activeRoom.name}
                           </h3>
                           {activeRoom.subtitle && (
-                            <p className="mt-0.5 text-[13px] font-semibold text-[#777777]">
+                            <p className="mt-0.5 text-[12.5px] text-[#777777]">
                               {activeRoom.subtitle}
                             </p>
                           )}
                         </div>
 
                         <span
-                          className={`px-2.5 py-1 text-[13px] font-extrabold ${
+                          className={`rounded-[4px] px-2.5 py-1 text-[12.5px] font-bold ${
                             activeRoomEntries.length >= 2
-                              ? 'border border-amber-400 bg-amber-100 text-amber-950'
+                              ? 'border border-[#f59e0b] bg-[#fef3c7] text-[#92400e]'
                               : activeRoomEntries.length === 1
-                              ? 'border border-[#6cb5a8] bg-[#e6f5f2] text-[#25574e]'
+                              ? 'border border-[#6cb5a8] bg-[#eef8f6] text-[#25574e]'
                               : 'border border-[#dcdcdc] bg-[#fafafa] text-[#777777]'
                           }`}
                         >
@@ -3007,22 +3148,21 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* 중복 사용 안내 */}
                     {activeRoomEntries.length >= 2 && (
-                      <div className="border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-950">
-                        현재 <strong>{activeRoomEntries.length}개 팀</strong>이 함께 배정되어 있습니다. 각 팀의 활동시간과 내용을 확인하세요.
+                      <div className="rounded-[4px] border border-[#fcd34d] bg-[#fffbeb] px-3 py-2 text-[12.5px] leading-relaxed text-[#92400e]">
+                        현재 <strong>{activeRoomEntries.length}개 팀</strong>이 함께 배정되어 있습니다.
                       </div>
                     )}
 
-                    {/* 팀 목록 또는 빈 공간 안내 */}
+                    {/* 팀 목록 (실제 과구리 탐활서 확인 2열 테이블 스타일) */}
                     {activeRoomEntries.length === 0 ? (
-                      <div className="border border-dashed border-[#cccccc] bg-[#fafafa] px-4 py-10 text-center">
-                        <p className="text-[15px] font-bold text-[#555555]">
+                      <div className="rounded-[4px] border border-dashed border-[#cccccc] bg-[#fafafa] px-4 py-10 text-center">
+                        <p className="text-[14px] font-bold text-[#555555]">
                           {formatShortKoreanDate(selectedDate)} 기준
                           <br />
                           배정된 탐활이 없습니다.
                         </p>
-                        <p className="mt-1.5 text-[13px] text-[#888888]">
+                        <p className="mt-1 text-[12.5px] text-[#888888]">
                           현재 비어 있는 공간입니다.
                         </p>
                       </div>
@@ -3031,98 +3171,102 @@ export default function App() {
                         {activeRoomEntries.map((item, idx) => (
                           <div
                             key={item.id}
-                            className={`border bg-[#fcfcfc] p-4 space-y-3.5 ${
-                              activeRoomEntries.length >= 2
-                                ? 'border-amber-300'
-                                : 'border-[#bde0d9]'
-                            }`}
+                            className="overflow-hidden rounded-[4px] border border-[#cccccc] bg-white"
                           >
-                            {/* 팀 번호 & 활동시간 */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#eeeeee] pb-2.5">
-                              <span
-                                className={`px-2.5 py-0.5 text-[13px] font-extrabold text-white ${
-                                  activeRoomEntries.length >= 2
-                                    ? 'bg-amber-600'
-                                    : 'bg-[#5aa396]'
-                                }`}
-                              >
+                            {/* 과구리 탐활서 상단 바 (팀 번호 / 신청시각) */}
+                            <div className="flex items-center justify-between border-b border-[#dcdcdc] bg-[#fafafa] px-3 py-1.5 text-[12px] text-[#777777]">
+                              <span className="font-bold text-[#222222]">
                                 팀 #{idx + 1}
                               </span>
-                              <span className="text-[13px] font-bold text-[#444444]">
-                                {item.timeSlots.join(', ')}
-                              </span>
+                              <span>{item.submittedAt || item.date}</span>
                             </div>
 
-                            {/* 활동내용 */}
-                            <div>
-                              <p className="text-[12px] font-bold text-[#888888]">
-                                활동내용
-                              </p>
-                              <p className="mt-1 text-[15px] font-extrabold text-[#222222] leading-snug">
-                                {item.content}
-                              </p>
-                            </div>
-
-                            {/* 대표학생 & 지도교사 */}
-                            <div className="grid grid-cols-2 gap-2.5 border border-[#eeeeee] bg-white p-3 text-[14px]">
-                              <div>
-                                <span className="flex items-center gap-1 text-[12px] font-bold text-[#888888]">
-                                  <UserCheckIcon className="h-3.5 w-3.5 text-[#5aa396]" />
-                                  대표학생
-                                </span>
-                                <p className="mt-0.5 font-extrabold text-[#222222]">
-                                  {item.leader}
-                                </p>
-                              </div>
-                              <div>
-                                <span className="flex items-center gap-1 text-[12px] font-bold text-[#888888]">
-                                  <GraduationCapIcon className="h-3.5 w-3.5 text-[#5aa396]" />
-                                  지도교사
-                                </span>
-                                <p className="mt-0.5 font-extrabold text-[#222222]">
-                                  {item.teacher} 선생님
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* 참가학생 명단 칩 */}
-                            <div>
-                              <p className="mb-1.5 text-[12px] font-bold text-[#888888]">
-                                참가학생 ({item.members.length}명)
-                              </p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {item.members.map((member, mIdx) => {
-                                  const isSearchHit =
-                                    normalizedQuery &&
-                                    member.toLowerCase().includes(normalizedQuery);
-                                  return (
-                                    <span
-                                      key={mIdx}
-                                      className={`border px-2.5 py-1 text-[13px] ${
-                                        isSearchHit
-                                          ? 'border-[#e87a3d] bg-orange-50 font-extrabold text-orange-950'
-                                          : 'border-[#dcdcdc] bg-white font-semibold text-[#333333]'
-                                      }`}
-                                    >
-                                      {member}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* 원본 장소 표기 */}
-                            <div className="flex items-center justify-between border-t border-[#eeeeee] pt-2 text-[12px] text-[#888888]">
-                              <span>원본 표기: {item.rawLocation}</span>
-                              {item.submittedAt && <span>{item.submittedAt}</span>}
-                            </div>
+                            {/* 과구리 '탐활서 확인' 2열 테이블 (좌측 #f2f2f2 라벨 / 우측 #ffffff 내용) */}
+                            <table className="w-full border-collapse text-[13px]">
+                              <tbody>
+                                <tr className="border-b border-[#e2e2e2]">
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                                    활동날짜
+                                  </th>
+                                  <td className="bg-white py-2 px-3 text-[#222222]">
+                                    {item.date}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-[#e2e2e2]">
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                                    활동시간
+                                  </th>
+                                  <td className="bg-white py-2 px-3 text-[#222222]">
+                                    {item.timeSlots.join(', ')}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-[#e2e2e2]">
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                                    활동장소
+                                  </th>
+                                  <td className="bg-white py-2 px-3 text-[#222222]">
+                                    {item.rawLocation}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-[#e2e2e2]">
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                                    활동내용
+                                  </th>
+                                  <td className="bg-white py-2 px-3 font-medium text-[#111111] leading-snug">
+                                    {item.content}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-[#e2e2e2]">
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                                    대표학생
+                                  </th>
+                                  <td className="bg-white py-2 px-3 font-bold text-[#111111]">
+                                    {item.leader}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-[#e2e2e2]">
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc] align-top">
+                                    참가학생
+                                  </th>
+                                  <td className="bg-white py-2 px-3 text-[#222222] leading-relaxed break-keep">
+                                    {item.members.map((member, mIdx) => {
+                                      const isSearchHit =
+                                        normalizedQuery &&
+                                        member.toLowerCase().includes(normalizedQuery);
+                                      return (
+                                        <span key={mIdx}>
+                                          <span
+                                            className={
+                                              isSearchHit
+                                                ? 'bg-[#fef3c7] font-bold text-[#92400e] px-1'
+                                                : ''
+                                            }
+                                          >
+                                            {member}
+                                          </span>
+                                          {mIdx < item.members.length - 1 ? ', ' : ''}
+                                        </span>
+                                      );
+                                    })}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                                    지도교사
+                                  </th>
+                                  <td className="bg-white py-2 px-3 text-[#222222]">
+                                    {item.teacher}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                           </div>
                         ))}
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="py-12 text-center text-[14px] text-[#777777]">
+                  <div className="py-12 text-center text-[13.5px] text-[#777777]">
                     좌측 평면도에서 확인할 실을 클릭해 주세요.
                   </div>
                 )}
@@ -3133,52 +3277,52 @@ export default function App() {
       </main>
 
       {/* ====================================================================
-          과구리 탐활서 데이터 붙여넣기 모달 (최신 27건 초기화 + 자동 파싱 미리보기)
+          과구리 탐활서 데이터 붙여넣기 모달
          ==================================================================== */}
       {isPasteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-2xl overflow-hidden border border-[#dcdcdc] bg-white shadow-2xl">
-            <div className="flex items-center justify-between bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] px-5 py-4 text-white">
+          <div className="w-full max-w-2xl overflow-hidden rounded-[6px] border border-[#dcdcdc] bg-white shadow-xl">
+            <div className="flex items-center justify-between bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] px-5 py-3.5 text-white">
               <div>
-                <h3 className="text-[17px] font-extrabold">
+                <h3 className="text-[16px] font-bold">
                   과구리 탐활서 데이터 붙여넣기 및 관리
                 </h3>
-                <p className="text-[13px] text-white/95">
-                  과구리(jshsus.kr) 탐활서 내용을 붙여넣으면 자동 파싱 및 브라우저에 저장됩니다.
+                <p className="text-[12.5px] text-white/95">
+                  과구리(jshsus.kr) 탐활서 내용을 붙여넣으면 자동 파싱 및 저장됩니다.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsPasteModalOpen(false)}
-                className="p-1 text-white/90 hover:bg-white/20"
+                className="p-1 text-white/90 hover:bg-white/20 rounded-[4px]"
               >
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
 
             <div className="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
-              <div className="flex flex-wrap items-center justify-between gap-2 border border-[#bde0d9] bg-[#f2faf8] p-3.5 text-[13px] text-[#25574e]">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-[4px] border border-[#bde0d9] bg-[#eef8f6] p-3 text-[13px] text-[#25574e]">
                 <div className="flex items-center gap-2">
                   <InfoIcon className="h-4 w-4 text-[#5aa396] shrink-0" />
                   <span>
-                    한 줄 형식(<code>활동날짜2026-11-16</code>)과 웹 표 복사 줄바꿈 형식 모두 자동 인식합니다.
+                    한 줄 형식(<code>활동날짜2026-11-16</code>)과 표 복사 줄바꿈 형식 모두 자동 인식합니다.
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setPasteInput(DEFAULT_GWAGURI_RAW_TEXT)}
-                    className="inline-flex items-center gap-1.5 border border-[#5aa396] bg-white hover:bg-[#e6f5f2] px-3 py-1.5 text-[13px] font-bold text-[#25574e] transition-colors"
+                    className="rounded-[4px] border border-[#5aa396] bg-white hover:bg-[#e6f5f2] px-2.5 py-1 text-[12.5px] font-bold text-[#25574e]"
                   >
-                    <span>최신 27건 편집창 채우기</span>
+                    기본 27건 편집창 채우기
                   </button>
                   <button
                     type="button"
                     onClick={handleResetToDefaultData}
-                    className="inline-flex items-center gap-1.5 bg-[#5aa396] hover:bg-[#498d81] px-3 py-1.5 text-[13px] font-bold text-white transition-colors"
+                    className="inline-flex items-center gap-1 rounded-[4px] bg-[#5aa396] hover:bg-[#498d81] px-2.5 py-1 text-[12.5px] font-bold text-white"
                   >
                     <RotateCcwIcon className="h-3.5 w-3.5" />
-                    <span>최신 27건으로 즉시 초기화</span>
+                    <span>기본 27건으로 초기화</span>
                   </button>
                 </div>
               </div>
@@ -3188,20 +3332,20 @@ export default function App() {
                 value={pasteInput}
                 onChange={(e) => setPasteInput(e.target.value)}
                 placeholder={`과구리 탐활서 게시판 내용을 그대로 복사(Ctrl+C)하여 여기에 붙여넣으세요(Ctrl+V)...\n\n예시)\n활동날짜2026-11-16\n활동시간19:10 ~ 20:20, 20:30 ~ 21:30\n활동장소물리실험실\n활동내용KYPT 준비 및 실험\n대표학생2304 김민건\n참가학생2304 김민건, 2215 신태민\n지도교사김희웅`}
-                className="w-full border border-[#dcdcdc] bg-[#fafafa] p-3.5 text-[14px] text-[#222222] placeholder:text-[#999999] focus:border-[#6cb5a8] focus:bg-white focus:outline-none"
+                className="w-full rounded-[4px] border border-[#dcdcdc] bg-[#fafafa] p-3 text-[13.5px] text-[#222222] placeholder:text-[#999999] focus:border-[#5aa396] focus:bg-white focus:outline-none"
               />
 
               {previewParsedEntries.length > 0 && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[14px] font-bold text-[#333333]">
+                  <div className="flex items-center justify-between text-[13.5px] font-bold text-[#222222]">
                     <span>
                       자동 파싱 미리보기: 총{' '}
-                      <strong className="text-[#5aa396]">
+                      <strong className="text-[#498d81]">
                         {previewParsedEntries.length}건
                       </strong>{' '}
                       인식됨
                     </span>
-                    <span className="text-[#666666]">
+                    <span className="text-[12.5px] font-normal text-[#666666]">
                       교내 매핑{' '}
                       {
                         previewParsedEntries.filter((e) => e.normalizedRoomId)
@@ -3216,45 +3360,47 @@ export default function App() {
                     </span>
                   </div>
 
-                  <div className="max-h-48 overflow-y-auto border border-[#dcdcdc]">
-                    <table className="w-full text-left text-[13px]">
-                      <thead className="bg-[#f4f4f4] text-[#555555] font-bold border-b border-[#dcdcdc]">
+                  <div className="max-h-48 overflow-y-auto rounded-[4px] border border-[#dcdcdc]">
+                    <table className="w-full text-left text-[12.5px] border-collapse">
+                      <thead className="bg-[#f2f2f2] text-[#222222] font-bold border-b border-[#dcdcdc]">
                         <tr>
-                          <th className="px-3 py-2">날짜</th>
-                          <th className="px-3 py-2">원본 장소 → 매핑 공간</th>
-                          <th className="px-3 py-2">대표학생</th>
+                          <th className="px-3 py-2 border-r border-[#e2e2e2]">날짜</th>
+                          <th className="px-3 py-2 border-r border-[#e2e2e2]">
+                            원본 장소 → 매핑 공간
+                          </th>
+                          <th className="px-3 py-2 border-r border-[#e2e2e2]">대표학생</th>
                           <th className="px-3 py-2">활동내용</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#eeeeee]">
+                      <tbody className="divide-y divide-[#e2e2e2]">
                         {previewParsedEntries.map((row) => {
                           const mapped = row.normalizedRoomId
                             ? ROOM_BY_ID[row.normalizedRoomId]
                             : null;
                           return (
                             <tr key={row.id}>
-                              <td className="px-3 py-2 whitespace-nowrap text-[#666666]">
+                              <td className="px-3 py-2 whitespace-nowrap text-[#555555] border-r border-[#eeeeee]">
                                 {row.date}
                               </td>
-                              <td className="px-3 py-2">
-                                <span className="text-[#888888] mr-1">
+                              <td className="px-3 py-2 border-r border-[#eeeeee]">
+                                <span className="text-[#777777] mr-1">
                                   {row.rawLocation} →
                                 </span>
                                 {mapped ? (
-                                  <span className="font-bold text-[#2c665c]">
+                                  <span className="font-bold text-[#25574e]">
                                     {mapped.buildingShortName} {mapped.floorLabel}{' '}
                                     {mapped.name}
                                   </span>
                                 ) : (
-                                  <span className="font-semibold text-indigo-700">
+                                  <span className="font-bold text-[#3730a3]">
                                     교외 / 기타 장소
                                   </span>
                                 )}
                               </td>
-                              <td className="px-3 py-2 font-bold text-[#222222] whitespace-nowrap">
+                              <td className="px-3 py-2 font-bold text-[#222222] whitespace-nowrap border-r border-[#eeeeee]">
                                 {row.leader}
                               </td>
-                              <td className="px-3 py-2 text-[#555555] truncate max-w-[180px]">
+                              <td className="px-3 py-2 text-[#444444] truncate max-w-[180px]">
                                 {row.content}
                               </td>
                             </tr>
@@ -3266,20 +3412,20 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2.5 pt-3 border-t border-[#eeeeee]">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#eeeeee]">
                 <button
                   type="button"
                   onClick={() => setIsPasteModalOpen(false)}
-                  className="border border-[#dcdcdc] bg-white px-4 py-2 text-[14px] font-bold text-[#555555] hover:bg-[#f4f4f4]"
+                  className="rounded-[4px] border border-[#dcdcdc] bg-white px-4 py-1.5 text-[13.5px] font-bold text-[#555555] hover:bg-[#f5f5f5]"
                 >
                   닫기
                 </button>
                 <button
                   type="button"
                   onClick={handleApplyPastedText}
-                  className="bg-[#5aa396] hover:bg-[#498d81] px-5 py-2 text-[14px] font-bold text-white transition-colors"
+                  className="rounded-[4px] bg-[#5aa396] hover:bg-[#498d81] px-4 py-1.5 text-[13.5px] font-bold text-white transition-colors"
                 >
-                  지도에 반영 및 저장하기
+                  지도에 반영하기
                 </button>
               </div>
             </div>
@@ -3288,27 +3434,27 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          교외 / 기타 장소 드로어 모달 (예: 전남대학교 사범대 등)
+          교외 / 기타 장소 모달 (과구리 탐활서 2열 테이블 적용)
          ==================================================================== */}
       {isOffCampusOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg overflow-hidden border border-[#dcdcdc] bg-white shadow-2xl">
-            <div className="flex items-center justify-between bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] px-5 py-4 text-white">
+          <div className="w-full max-w-lg overflow-hidden rounded-[6px] border border-[#dcdcdc] bg-white shadow-xl">
+            <div className="flex items-center justify-between bg-gradient-to-r from-[#76b9ad] to-[#96cfc4] px-5 py-3.5 text-white">
               <div className="flex items-center gap-2">
-                <ExternalLinkIcon className="h-4 w-4" />
+                <MapPinIcon className="h-4 w-4" />
                 <div>
-                  <h3 className="text-[17px] font-extrabold">
+                  <h3 className="text-[16px] font-bold">
                     교외 / 기타 장소 탐활 내역
                   </h3>
-                  <p className="text-[13px] text-white/95">
-                    {formatShortKoreanDate(selectedDate)} 기준 교외 연계 활동 ({offCampusEntries.length}건)
+                  <p className="text-[12.5px] text-white/95">
+                    {formatShortKoreanDate(selectedDate)} 기준 교외 활동 ({offCampusEntries.length}건)
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOffCampusOpen(false)}
-                className="p-1 text-white/90 hover:bg-white/20"
+                className="p-1 text-white/90 hover:bg-white/20 rounded-[4px]"
               >
                 <XIcon className="h-5 w-5" />
               </button>
@@ -3316,48 +3462,75 @@ export default function App() {
 
             <div className="p-5 space-y-3.5 max-h-[70vh] overflow-y-auto bg-[#fafafa]">
               {offCampusEntries.length === 0 ? (
-                <p className="py-8 text-center text-[14px] text-[#777777]">
+                <p className="py-8 text-center text-[13.5px] text-[#777777]">
                   선택된 날짜·시간에 교외/기타 장소 활동이 없습니다.
                 </p>
               ) : (
                 offCampusEntries.map((item) => (
                   <div
                     key={item.id}
-                    className="border border-[#dcdcdc] bg-white p-4 space-y-2.5"
+                    className="overflow-hidden rounded-[4px] border border-[#cccccc] bg-white"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1 bg-indigo-600 px-2.5 py-0.5 text-[13px] font-bold text-white">
-                        <MapPinIcon className="h-3.5 w-3.5" />
-                        {item.rawLocation}
-                      </span>
-                      <span className="text-[13px] font-bold text-[#666666]">
-                        {item.timeSlots.join(', ')}
-                      </span>
-                    </div>
-
-                    <p className="text-[15px] font-extrabold text-[#222222]">
-                      {item.content}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-3.5 text-[14px] text-[#444444]">
-                      <span>
-                        <strong>대표학생:</strong> {item.leader}
-                      </span>
-                      <span>
-                        <strong>지도교사:</strong> {item.teacher} 선생님
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {item.members.map((m, idx) => (
-                        <span
-                          key={idx}
-                          className="border border-[#dcdcdc] bg-[#fafafa] px-2.5 py-0.5 text-[13px] font-medium text-[#444444]"
-                        >
-                          {m}
-                        </span>
-                      ))}
-                    </div>
+                    <table className="w-full border-collapse text-[13px]">
+                      <tbody>
+                        <tr className="border-b border-[#e2e2e2]">
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            활동날짜
+                          </th>
+                          <td className="bg-white py-2 px-3 text-[#222222]">
+                            {item.date}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-[#e2e2e2]">
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            활동시간
+                          </th>
+                          <td className="bg-white py-2 px-3 text-[#222222]">
+                            {item.timeSlots.join(', ')}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-[#e2e2e2]">
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            활동장소
+                          </th>
+                          <td className="bg-white py-2 px-3 font-bold text-[#3730a3]">
+                            {item.rawLocation}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-[#e2e2e2]">
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            활동내용
+                          </th>
+                          <td className="bg-white py-2 px-3 font-medium text-[#111111]">
+                            {item.content}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-[#e2e2e2]">
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            대표학생
+                          </th>
+                          <td className="bg-white py-2 px-3 font-bold text-[#111111]">
+                            {item.leader}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-[#e2e2e2]">
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            참가학생
+                          </th>
+                          <td className="bg-white py-2 px-3 text-[#222222]">
+                            {item.members.join(', ')}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th className="w-[86px] bg-[#f2f2f2] py-2 px-2 text-center font-bold text-[#222222] border-r border-[#dcdcdc]">
+                            지도교사
+                          </th>
+                          <td className="bg-white py-2 px-3 text-[#222222]">
+                            {item.teacher}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 ))
               )}

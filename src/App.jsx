@@ -1,32 +1,28 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 
 /**
- * 사용자의 현재 시스템 로컬 날짜를 'YYYY-MM-DD' 형식으로 반환합니다.
- * UTC 변환 시차로 날짜가 밀리는 문제를 방지하기 위해 로컬 연·월·일을 직접 조합합니다.
+ * ============================================================================
+ * 1. 날짜 및 자정(00:00) 자동 전환 유틸리티
+ * ============================================================================
  */
 function getLocalTodayStr() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
-/**
- * 'YYYY-MM-DD' 문자열에 일수(deltaDays)를 더하거나 뺀 날짜 문자열을 반환합니다.
- */
-function shiftDateStr(dateStr, deltaDays) {
+function addDays(dateStr, delta) {
   const [y, m, d] = dateStr.split('-').map(Number);
-  const dt = new Date(y, m - 1, d + deltaDays);
-  const year = dt.getFullYear();
-  const month = String(dt.getMonth() + 1).padStart(2, '0');
-  const day = String(dt.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + delta);
+  const ny = dt.getFullYear();
+  const nm = String(dt.getMonth() + 1).padStart(2, '0');
+  const nd = String(dt.getDate()).padStart(2, '0');
+  return `${ny}-${nm}-${nd}`;
 }
 
-/**
- * 'YYYY-MM-DD' 문자열을 'M월 D일 (요일)' 한국어 표기로 변환합니다.
- */
 function formatKoreanDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
@@ -35,9 +31,12 @@ function formatKoreanDate(dateStr) {
 }
 
 /**
- * 전남과학고등학교 3개 건물(성실관·창의관·성취관) 및 층별 2단 블록 그리드 구조
- * - 상단 구역(topRooms) · 중앙 복도 바 · 하단 구역(bottomRooms)의 3~4열 그리드로 구성하여
- *   모든 실 이름과 부제가 세로 줄바꿈이나 겹침 없이 선명하게 표시됩니다.
+ * ============================================================================
+ * 2. 전남과학고등학교 3개 건물(성실관·창의관·성취관) 및 층별 2단 블록 그리드 구조
+ *    - 창의관 2층: 물리실험실·물리 R&E실과 함께 수학1실·수학2실 배치
+ *    - 성실관 3층: 2학년 교실과 함께 도서관 배치
+ *    - 성실관 4층: 3학년 교실과 함께 무한상상실·학생회실 배치
+ * ============================================================================
  */
 const BUILDINGS = {
   seongsil: {
@@ -60,53 +59,51 @@ const BUILDINGS = {
           { id: 'seongsil_1f_ai', name: 'AI실', sub: '연구·정보구역' },
           { id: 'seongsil_1f_coding', name: '코딩실', sub: '구 멀티실' },
           { id: 'seongsil_1f_info', name: '정보실', sub: '정보·전산구역' },
-          { id: 'seongsil_1f_cafeteria', name: '급식실', sub: '시설·준비구역' },
         ],
       },
       '2F': {
         label: '2F',
         corridor: '◀ 서측 계단 | 2층 복도 | 창의관 2층 연결통로 ▶',
         topRooms: [
-          { id: 'seongsil_2f_1_1', name: '1-1 교실', sub: '1학년 학급교실' },
-          { id: 'seongsil_2f_1_2', name: '1-2 교실', sub: '1학년 학급교실' },
-          { id: 'seongsil_2f_1_3', name: '1-3 교실', sub: '1학년 학급교실' },
-          { id: 'seongsil_2f_1_4', name: '1-4 교실', sub: '1학년 학급교실' },
+          { id: 'seongsil_2f_1_1', name: '1-1반 교실', sub: '1학년 학급교실' },
+          { id: 'seongsil_2f_1_2', name: '1-2반 교실', sub: '1학년 학급교실' },
+          { id: 'seongsil_2f_1_3', name: '1-3반 교실', sub: '1학년 학급교실' },
+          { id: 'seongsil_2f_1_4', name: '1-4반 교실', sub: '1학년 학급교실' },
         ],
         bottomRooms: [
-          { id: 'seongsil_2f_grade1', name: '1학년부 교무실', sub: '교무·행정구역' },
-          { id: 'seongsil_2f_career', name: '진로진학상담실', sub: '상담·진로구역' },
-          { id: 'seongsil_2f_wee', name: '위클래스(Wee)', sub: '상담·지원구역' },
+          { id: 'seongsil_2f_main_office', name: '본교무실', sub: '교무·행정구역' },
+          { id: 'seongsil_2f_study1', name: '제1면학실', sub: '1학년 자기주도학습실' },
+          { id: 'seongsil_2f_wee', name: '위클래스·상담실', sub: '상담·진로지원구역' },
         ],
       },
       '3F': {
         label: '3F',
         corridor: '◀ 서측 계단 | 3층 복도 | 동측 계단 ▶',
         topRooms: [
-          { id: 'seongsil_3f_2_1', name: '2-1 교실', sub: '2학년 학급교실' },
-          { id: 'seongsil_3f_2_2', name: '2-2 교실', sub: '2학년 학급교실' },
-          { id: 'seongsil_3f_2_3', name: '2-3 교실', sub: '2학년 학급교실' },
-          { id: 'seongsil_3f_2_4', name: '2-4 교실', sub: '2학년 학급교실' },
+          { id: 'seongsil_3f_2_1', name: '2-1반 교실', sub: '2학년 학급교실' },
+          { id: 'seongsil_3f_2_2', name: '2-2반 교실', sub: '2학년 학급교실' },
+          { id: 'seongsil_3f_2_3', name: '2-3반 교실', sub: '2학년 학급교실' },
+          { id: 'seongsil_3f_library', name: '도서관', sub: '면학·독서·자료열람실' },
         ],
         bottomRooms: [
+          { id: 'seongsil_3f_2_4', name: '2-4반 교실', sub: '2학년 학급교실' },
           { id: 'seongsil_3f_grade2', name: '2학년부 교무실', sub: '교무·행정구역' },
-          { id: 'seongsil_3f_main_office', name: '본교무실', sub: '교무·행정구역' },
-          { id: 'seongsil_3f_jbs', name: '방송실(JBS)', sub: '방송·미디어구역' },
+          { id: 'seongsil_3f_study2', name: '제2면학실', sub: '2학년 자기주도학습실' },
         ],
       },
       '4F': {
         label: '4F',
         corridor: '◀ 서측 계단 | 4층 복도 | 동측 계단 ▶',
         topRooms: [
-          { id: 'seongsil_4f_3_1', name: '3-1 교실', sub: '3학년 학급교실' },
-          { id: 'seongsil_4f_3_2', name: '3-2 교실', sub: '3학년 학급교실' },
-          { id: 'seongsil_4f_3_3', name: '3-3 교실', sub: '3학년 학급교실' },
-          { id: 'seongsil_4f_3_4', name: '3-4 교실', sub: '3학년 학급교실' },
+          { id: 'seongsil_4f_3_1', name: '3-1반 교실', sub: '3학년 학급교실' },
+          { id: 'seongsil_4f_3_2', name: '3-2반 교실', sub: '3학년 학급교실' },
+          { id: 'seongsil_4f_maker', name: '무한상상실', sub: '메이커·창작·탐구실' },
+          { id: 'seongsil_4f_council', name: '학생회실', sub: '학생자치회실' },
         ],
         bottomRooms: [
-          { id: 'seongsil_4f_math1', name: '수학1실', sub: '수학 교과전용실' },
-          { id: 'seongsil_4f_math2', name: '수학2실', sub: '수학 교과전용실' },
-          { id: 'seongsil_4f_english', name: '영어전용실', sub: '어학 교과전용실' },
-          { id: 'seongsil_4f_library', name: '도서관(글마루)', sub: '열람·자료구역' },
+          { id: 'seongsil_4f_3_3', name: '3-3반 교실', sub: '3학년 학급교실' },
+          { id: 'seongsil_4f_3_4', name: '3-4반 교실', sub: '3학년 학급교실' },
+          { id: 'seongsil_4f_study3', name: '제3면학실', sub: '3학년 자기주도학습실' },
         ],
       },
     },
@@ -122,35 +119,39 @@ const BUILDINGS = {
         corridor: '◀ 반원형 중앙 계단 | 1층 지구과학 복도 | 동측 계단 ▶',
         topRooms: [
           { id: 'chang_1f_earth_lab', name: '지구과학 실험실', sub: '지구과학 탐구구역' },
-          { id: 'chang_1f_earth_prep', name: '지구과학 준비실', sub: '실험·기자재 준비' },
+          { id: 'chang_1f_earth_re', name: '지구과학 R&E실', sub: '심화 R&E 연구실' },
         ],
         bottomRooms: [
-          { id: 'chang_1f_earth_re', name: '지구과학 R&E실', sub: '심화 R&E 연구실' },
-          { id: 'chang_1f_seminar', name: '세미나실', sub: '발표·토론구역' },
+          { id: 'chang_1f_earth_prep', name: '지구과학 준비실', sub: '실험·기자재 준비' },
+          { id: 'chang_1f_seminar', name: '지구과학 세미나실', sub: '발표·토론구역' },
         ],
       },
       '2F': {
         label: '2F',
         corridor: '◀ 성실관 2층 연결통로 | 2층 물리·수학 복도 | 동측 계단 ▶',
         topRooms: [
-          { id: 'chang_2f_phys_lab', name: '물리 실험실', sub: '물리 탐구·실험구역' },
-          { id: 'chang_2f_phys_prep', name: '물리 준비실', sub: '실험·기자재 준비' },
+          { id: 'chang_2f_phys_lab', name: '물리실험실', sub: '물리 탐구·실험구역' },
+          { id: 'chang_2f_phys_re', name: '물리 R&E실', sub: '심화 R&E 연구실' },
+          { id: 'chang_2f_math1', name: '수학1실', sub: '수학 교과전용실' },
+          { id: 'chang_2f_math2', name: '수학2실', sub: '수학 교과전용실' },
         ],
         bottomRooms: [
-          { id: 'chang_2f_phys_re', name: '물리 R&E실', sub: '심화 R&E 연구실' },
-          { id: 'chang_2f_math_lab', name: '수학 탐구실', sub: '수리·모델링 연구' },
+          { id: 'chang_2f_phys_prep', name: '물리준비실', sub: '실험·기자재 준비' },
+          { id: 'chang_2f_math_lab', name: '수학연구실', sub: '수리·모델링 연구' },
+          { id: 'chang_2f_seminar', name: '기초과학 세미나실', sub: '발표·토론구역' },
         ],
       },
       '3F': {
         label: '3F',
-        corridor: '◀ 반원형 중앙 계단 | 3층 생물 복도 | 동측 계단 ▶',
+        corridor: '◀ 반원형 중앙 계단 | 3층 생명과학 복도 | 동측 계단 ▶',
         topRooms: [
-          { id: 'chang_3f_bio_lab', name: '생명과학 실험실', sub: '생명과학 탐구구역' },
-          { id: 'chang_3f_bio_prep', name: '생물 준비실', sub: '실험·기자재 준비' },
+          { id: 'chang_3f_bio_lab', name: '생명과학실험실', sub: '생명과학 탐구구역' },
+          { id: 'chang_3f_bio_re', name: '생명과학 R&E실', sub: '심화 R&E 연구실' },
+          { id: 'chang_3f_bio_prep', name: '생명과학준비실', sub: '실험·기자재 준비' },
         ],
         bottomRooms: [
-          { id: 'chang_3f_bio_re', name: '생명과학 R&E실', sub: '심화 R&E 연구실' },
-          { id: 'chang_3f_equip', name: '첨단기기실', sub: '정밀 분석장비구역' },
+          { id: 'chang_3f_equip', name: '현미경·기기실', sub: '정밀 분석장비구역' },
+          { id: 'chang_3f_lecture', name: '생명과학 강의실', sub: '교과·세미나구역' },
         ],
       },
       '4F': {
@@ -158,10 +159,10 @@ const BUILDINGS = {
         corridor: '◀ 반원형 중앙 계단 | 4층 화학 복도 | 동측 계단 ▶',
         topRooms: [
           { id: 'chang_4f_chem_lab', name: '화학 실험실', sub: '화학 탐구·실험구역' },
-          { id: 'chang_4f_chem_prep', name: '화학 준비실', sub: '실험·기자재 준비' },
+          { id: 'chang_4f_chem_re', name: '화학 R&E실', sub: '심화 R&E 연구실' },
         ],
         bottomRooms: [
-          { id: 'chang_4f_chem_re', name: '화학 R&E실', sub: '심화 R&E 연구실' },
+          { id: 'chang_4f_chem_prep', name: '화학 준비실', sub: '실험·기자재 준비' },
           { id: 'chang_4f_reagent', name: '약품보관실', sub: '시약·안전관리구역' },
         ],
       },
@@ -206,9 +207,9 @@ const BUILDINGS = {
 };
 
 /**
- * 전체 실 ID -> 건물/층/실 메타데이터 빠른 조회 사전
+ * 전체 실 ID -> 건물/층/실 메타데이터 O(1) 조회 사전
  */
-const ROOM_META_MAP = (() => {
+const ROOM_BY_ID = (() => {
   const map = {
     external: {
       id: 'external',
@@ -237,25 +238,33 @@ const ROOM_META_MAP = (() => {
 /**
  * 과구리 탐활서의 비정형 장소 표기를 표준 roomId로 매핑하는 별칭 사전
  */
-const LOCATION_ALIAS_ENTRIES = [
+const RAW_ALIAS_ENTRIES = [
   ['물리r&e', 'chang_2f_phys_re'],
   ['물리실험실', 'chang_2f_phys_lab'],
   ['물리탐구실험', 'chang_2f_phys_lab'],
   ['물리준비실', 'chang_2f_phys_prep'],
+  ['수학1실', 'chang_2f_math1'],
+  ['수학2실', 'chang_2f_math2'],
+  ['수학연구실', 'chang_2f_math_lab'],
   ['수학탐구실', 'chang_2f_math_lab'],
+  ['기초과학세미나실', 'chang_2f_seminar'],
+  ['지구과학세미나실', 'chang_1f_seminar'],
+  ['지구과학실험실', 'chang_1f_earth_lab'],
+  ['지구과학r&e', 'chang_1f_earth_re'],
+  ['지구과학준비실', 'chang_1f_earth_prep'],
   ['생명과학실험실', 'chang_3f_bio_lab'],
   ['생명과학실', 'chang_3f_bio_lab'],
   ['생명과학r&e', 'chang_3f_bio_re'],
+  ['생명과학준비실', 'chang_3f_bio_prep'],
   ['생물준비실', 'chang_3f_bio_prep'],
+  ['생명과학강의실', 'chang_3f_lecture'],
+  ['현미경·기기실', 'chang_3f_equip'],
+  ['현미경기기실', 'chang_3f_equip'],
   ['첨단기기실', 'chang_3f_equip'],
   ['화학실험실', 'chang_4f_chem_lab'],
   ['화학r&e', 'chang_4f_chem_re'],
   ['화학준비실', 'chang_4f_chem_prep'],
   ['약품보관실', 'chang_4f_reagent'],
-  ['지구과학실험실', 'chang_1f_earth_lab'],
-  ['지구과학r&e', 'chang_1f_earth_re'],
-  ['지구과학준비실', 'chang_1f_earth_prep'],
-  ['세미나실', 'chang_1f_seminar'],
   ['천문대', 'chang_rf_observatory'],
   ['주관측실', 'chang_rf_observatory'],
   ['코딩실', 'seongsil_1f_coding'],
@@ -267,30 +276,34 @@ const LOCATION_ALIAS_ENTRIES = [
   ['교직원협의실', 'seongsil_1f_council'],
   ['보건실', 'seongsil_1f_health'],
   ['중앙현관', 'seongsil_1f_lobby'],
-  ['급식실', 'seongsil_1f_cafeteria'],
   ['1-1', 'seongsil_2f_1_1'],
   ['1-2', 'seongsil_2f_1_2'],
   ['1-3', 'seongsil_2f_1_3'],
   ['1-4', 'seongsil_2f_1_4'],
-  ['1학년부', 'seongsil_2f_grade1'],
-  ['진로진학', 'seongsil_2f_career'],
+  ['본교무실', 'seongsil_2f_main_office'],
+  ['제1면학실', 'seongsil_2f_study1'],
+  ['1면학실', 'seongsil_2f_study1'],
   ['위클래스', 'seongsil_2f_wee'],
+  ['상담실', 'seongsil_2f_wee'],
   ['2-1', 'seongsil_3f_2_1'],
   ['2-2', 'seongsil_3f_2_2'],
   ['2-3', 'seongsil_3f_2_3'],
   ['2-4', 'seongsil_3f_2_4'],
+  ['도서관', 'seongsil_3f_library'],
+  ['글마루', 'seongsil_3f_library'],
   ['2학년부', 'seongsil_3f_grade2'],
-  ['본교무실', 'seongsil_3f_main_office'],
-  ['방송실', 'seongsil_3f_jbs'],
+  ['제2면학실', 'seongsil_3f_study2'],
+  ['2면학실', 'seongsil_3f_study2'],
   ['3-1', 'seongsil_4f_3_1'],
   ['3-2', 'seongsil_4f_3_2'],
   ['3-3', 'seongsil_4f_3_3'],
   ['3-4', 'seongsil_4f_3_4'],
-  ['수학1실', 'seongsil_4f_math1'],
-  ['수학2실', 'seongsil_4f_math2'],
-  ['영어전용실', 'seongsil_4f_english'],
-  ['도서관', 'seongsil_4f_library'],
-  ['글마루', 'seongsil_4f_library'],
+  ['무한상상실', 'seongsil_4f_maker'],
+  ['메이커', 'seongsil_4f_maker'],
+  ['학생회실', 'seongsil_4f_council'],
+  ['학생자치', 'seongsil_4f_council'],
+  ['제3면학실', 'seongsil_4f_study3'],
+  ['3면학실', 'seongsil_4f_study3'],
   ['음악실', 'seongchui_1f_music'],
   ['피아노', 'seongchui_1f_piano'],
   ['기악실', 'seongchui_1f_piano'],
@@ -299,6 +312,10 @@ const LOCATION_ALIAS_ENTRIES = [
   ['체육관', 'seongchui_2f_gym'],
   ['강당', 'seongchui_2f_gym'],
 ];
+
+const LOCATION_ALIAS_ENTRIES = [...RAW_ALIAS_ENTRIES].sort(
+  (a, b) => b[0].length - a[0].length
+);
 
 function normalizeLocationToRoomId(rawLocation) {
   if (!rawLocation) return 'external';
@@ -317,10 +334,27 @@ function normalizeLocationToRoomId(rawLocation) {
   return 'external';
 }
 
+function countUniqueStudents(rec) {
+  const set = new Set();
+  const addToken = (str) => {
+    if (!str) return;
+    str
+      .split(',')
+      .map((s) => s.replace(/^[.\s]+|[.\s]+$/g, ''))
+      .filter((s) => s && s !== '.')
+      .forEach((s) => set.add(s.replace(/\s+/g, '')));
+  };
+  addToken(rec.leader);
+  addToken(rec.members);
+  return Math.max(1, set.size);
+}
+
 /**
- * 실제 과구리(jshsus.kr) 탐활서 데이터 27건 (2026-11-16 ~ 2026-11-23)
+ * ============================================================================
+ * 3. 실제 과구리(jshsus.kr) 탐활서 데이터 27건 (2026-11-16 ~ 2026-11-23)
+ * ============================================================================
  */
-const DEFAULT_RECORDS = [
+const RAW_DEFAULT_RECORDS = [
   // 2026-11-16 (13건)
   {
     id: 'gw-01',
@@ -329,7 +363,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -343,7 +376,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'R&E 보고서 작성 및 회의',
     leader: '1306김혜안',
     members: '1305김재훈, 1306김혜안, 1316장승범, 1402국선우',
@@ -356,7 +388,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리R&E',
-    roomId: 'chang_2f_phys_re',
     topic: '시사 역사 골든벨 준비',
     leader: '2107박세인',
     members: '2107박세인,3108신서빈,1105김장현,1305김재훈,1205남도형',
@@ -369,7 +400,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 탐구실험',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 실험실',
     leader: '2205 김주호',
     members: '2205 김주호',
@@ -382,7 +412,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 탐구활동',
     leader: '2406 박희재',
     members: '2406 박희재, 2410 심재원',
@@ -395,7 +424,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '수학1실',
-    roomId: 'seongsil_4f_math1',
     topic: '스터디',
     leader: '2119 최율희',
     members: '2102 김정원, 2103 김주하, 2119 최율희, 2405 박상언, 2420 한재은',
@@ -408,7 +436,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '코딩실',
-    roomId: 'seongsil_1f_coding',
     topic: '소프트웨어 경시대회 준비',
     leader: '1117 조영우',
     members: '1117 조영우, 1114 이예지, 1310 서준혁',
@@ -421,7 +448,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '2-4반 교실',
-    roomId: 'seongsil_3f_2_4',
     topic: '스터디',
     leader: '2409 신현승',
     members: '2409 신현승, 2416 정민준',
@@ -434,7 +460,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 탐구활동',
     leader: '2101 김서율',
     members: '2101김서율, 2116 정수현, 2115정도연, 2302강다희',
@@ -447,7 +472,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리학 실험',
     leader: '1203김웅',
     members: '1203김웅, 1208박제경, 1213이시후, 1219황연준',
@@ -460,7 +484,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '생명과학실',
-    roomId: 'chang_3f_bio_lab',
     topic: '생명탐구',
     leader: '1201김슬우',
     members: '1315이서진',
@@ -473,7 +496,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '코딩실',
-    roomId: 'seongsil_1f_coding',
     topic: '소프트웨어경시대회준비',
     leader: '1111 이미엘',
     members: '1111 이미엘, 1409 신승민, 1319 현명원',
@@ -486,7 +508,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 탐구활동',
     leader: '2111이승찬',
     members: '2111 이승찬, 2108 방시우, 2307 김현우',
@@ -501,7 +522,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -515,7 +535,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '전남대학교 사범대',
-    roomId: 'external',
     topic: '알앤이활동',
     leader: '1117조영우',
     members: '1119황호준, 1302김동욱, 1418편성인',
@@ -528,7 +547,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 탐구활동',
     leader: '2406 박희재',
     members: '2406 박희재, 2410 심재원',
@@ -541,7 +559,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '생명과학실',
-    roomId: 'chang_3f_bio_lab',
     topic: '생명탐구',
     leader: '1315이서진',
     members: '1102구현준',
@@ -556,7 +573,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -570,7 +586,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '1-4 교실',
-    roomId: 'seongsil_2f_1_4',
     topic: '영어 빌드업반',
     leader: '1411이도윤',
     members:
@@ -584,7 +599,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 탐구활동',
     leader: '2406 박희재',
     members: '2406 박희재, 2410 심재원',
@@ -597,7 +611,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '생명과학실',
-    roomId: 'chang_3f_bio_lab',
     topic: '생명탐구',
     leader: '1102구현준',
     members: '1102구현준',
@@ -612,7 +625,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -626,7 +638,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리 실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: '물리 탐구활동',
     leader: '2406 박희재',
     members: '2406 박희재, 2410 심재원',
@@ -641,7 +652,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -655,7 +665,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -669,7 +678,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -683,7 +691,6 @@ const DEFAULT_RECORDS = [
     periods: ['1면학', '2면학', '3면학'],
     timeText: '19:10 ~ 20:20, 20:30 ~ 21:30',
     rawLocation: '물리실험실',
-    roomId: 'chang_2f_phys_lab',
     topic: 'KYPT 준비 및 실험(3면학까지 요청드립니다.)',
     leader: '2304 김민건',
     members:
@@ -692,227 +699,288 @@ const DEFAULT_RECORDS = [
   },
 ];
 
-const STORAGE_KEY = 'gwaguri_tamhwal_records_v3';
+const DEFAULT_RECORDS = RAW_DEFAULT_RECORDS.map((rec) => ({
+  ...rec,
+  roomId: normalizeLocationToRoomId(rec.rawLocation),
+}));
+
+const STORAGE_KEY = 'gwaguri_tamhwal_records_v4';
 
 /**
- * 과구리 '탐활서 확인' 페이지에서 복사한 텍스트(탭 구분형/줄바꿈형 모두 지원)를
- * 구조화된 레코드 배열로 변환하는 파싱 함수
+ * ============================================================================
+ * 4. 과구리 탐활서 원문 복사-붙여넣기 파서 (줄바꿈/탭 복사 형식 완벽 지원)
+ * ============================================================================
  */
-function parseGwaguriClipboardText(rawText, fallbackDate) {
+function parseGwaguriText(rawText) {
   if (!rawText || !rawText.trim()) return [];
 
-  const lines = rawText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const normalized = rawText
+    .replace(/\r\n/g, '\n')
+    .replace(/\t+/g, ' ')
+    .replace(
+      /(활동날짜|활동시간|활동장소|활동내용|대표학생|참가학생|지도교사|지원)\s*\n+\s*/g,
+      '$1 '
+    );
 
-  const fieldKeys = ['활동날짜', '활동시간', '활동장소', '활동내용', '대표학생', '참가학생', '지도교사'];
+  const blocks = normalized
+    .split(/(?=활동날짜)/g)
+    .map((b) => b.trim())
+    .filter((b) => b.includes('활동날짜'));
+
   const parsed = [];
-  let current = null;
-  let pendingKey = null;
 
-  const commitRecord = () => {
-    if (!current) return;
-    if (current.rawLocation || current.leader || current.topic || current.timeText) {
-      const dateSource = `${current.dateText || ''} ${current.timeText || ''}`;
-      const fullDateMatch = dateSource.match(/(20\d{2})[-./](\d{1,2})[-./](\d{1,2})/);
-      const shortDateMatch = dateSource.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-      const fallbackYear = fallbackDate.split('-')[0];
+  blocks.forEach((block, idx) => {
+    const lines = block
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
 
-      let resolvedDate = fallbackDate;
-      if (fullDateMatch) {
-        resolvedDate = `${fullDateMatch[1]}-${String(fullDateMatch[2]).padStart(2, '0')}-${String(
-          fullDateMatch[3]
-        ).padStart(2, '0')}`;
-      } else if (shortDateMatch) {
-        resolvedDate = `${fallbackYear}-${String(shortDateMatch[1]).padStart(2, '0')}-${String(
-          shortDateMatch[2]
-        ).padStart(2, '0')}`;
+    let date = '';
+    let timeText = '19:10 ~ 20:20, 20:30 ~ 21:30';
+    let rawLocation = '';
+    let topic = '';
+    let leader = '';
+    let members = '';
+    let teacher = '';
+
+    lines.forEach((line) => {
+      if (line.startsWith('활동날짜')) {
+        const m = line.replace('활동날짜', '').trim().match(/\d{4}-\d{2}-\d{2}/);
+        if (m) date = m[0];
+      } else if (line.startsWith('활동시간')) {
+        timeText = line.replace('활동시간', '').trim() || timeText;
+      } else if (line.startsWith('활동장소')) {
+        rawLocation = line.replace('활동장소', '').trim();
+      } else if (line.startsWith('활동내용')) {
+        topic = line.replace('활동내용', '').trim();
+      } else if (line.startsWith('대표학생')) {
+        leader = line.replace('대표학생', '').trim();
+      } else if (line.startsWith('참가학생')) {
+        const val = line.replace('참가학생', '').trim();
+        members = val === '.' || val === '' ? leader : val;
+      } else if (line.startsWith('지도교사')) {
+        teacher = line.replace('지도교사', '').trim();
       }
+    });
 
-      const timeStr = current.timeText || '19:10 ~ 20:20, 20:30 ~ 21:30';
-      const combinedHint = `${timeStr} ${current.topic || ''}`;
-      const periods = [];
-      if (/19:10|1\s*면학/.test(combinedHint)) periods.push('1면학');
-      if (/20:30|2\s*면학/.test(combinedHint)) periods.push('2면학');
-      if (/21:40|3\s*면학/.test(combinedHint)) periods.push('3면학');
-      if (periods.length === 0) periods.push('1면학', '2면학');
+    if (!date) return;
 
-      const rawLoc = current.rawLocation || '장소 미지정';
-      parsed.push({
-        id: `paste-${Date.now()}-${parsed.length}`,
-        date: resolvedDate,
-        submittedAt: current.submittedAt || '방금 붙여넣기 반영됨',
-        periods,
-        timeText: timeStr,
-        rawLocation: rawLoc,
-        roomId: normalizeLocationToRoomId(rawLoc),
-        topic: current.topic || '탐구활동',
-        leader: current.leader || '미상',
-        members: current.members || current.leader || '없음',
-        teacher: current.teacher || '미지정',
-      });
+    const periods = [];
+    if (timeText.includes('19:10') || timeText.includes('1면학')) periods.push('1면학');
+    if (timeText.includes('20:30') || timeText.includes('2면학')) periods.push('2면학');
+    if (
+      timeText.includes('21:40') ||
+      timeText.includes('3면학') ||
+      topic.includes('3면학')
+    ) {
+      periods.push('3면학');
     }
-    current = null;
-    pendingKey = null;
-  };
+    if (periods.length === 0) periods.push('1면학', '2면학');
 
-  for (const line of lines) {
-    // 제출 시각 줄 감지 (예: "11월 16일 16시 02분 12초")
-    if (/^\d{1,2}월\s*\d{1,2}일\s*\d{1,2}시/.test(line)) {
-      if (current && (current.rawLocation || current.leader)) {
-        commitRecord();
-      }
-      if (!current) current = {};
-      current.submittedAt = line;
-      pendingKey = null;
-      continue;
-    }
+    parsed.push({
+      id: `parsed-${Date.now()}-${idx}`,
+      date,
+      submittedAt: '방금 붙여넣음',
+      periods,
+      timeText,
+      rawLocation: rawLocation || '미지정',
+      roomId: normalizeLocationToRoomId(rawLocation),
+      topic: topic || '탐구활동',
+      leader: leader || '미기재',
+      members: members || leader || '미기재',
+      teacher: teacher || '미기재',
+    });
+  });
 
-    // "필드명\t값" 또는 "필드명 : 값" 한 줄 형식
-    let matchedSingleLine = false;
-    for (const key of fieldKeys) {
-      const m = line.match(new RegExp(`^${key}\\s*[:\\t]\\s*(.+)$`));
-      if (m) {
-        if ((key === '활동날짜' || key === '활동시간') && current && (current.rawLocation || current.leader)) {
-          commitRecord();
-        }
-        if (!current) current = {};
-        const val = m[1].trim();
-        if (key === '활동날짜') current.dateText = val;
-        if (key === '활동시간') current.timeText = val;
-        if (key === '활동장소') current.rawLocation = val;
-        if (key === '활동내용') current.topic = val;
-        if (key === '대표학생') current.leader = val;
-        if (key === '참가학생') current.members = val;
-        if (key === '지도교사') current.teacher = val;
-        pendingKey = null;
-        matchedSingleLine = true;
-        break;
-      }
-    }
-    if (matchedSingleLine) continue;
-
-    // 단독 라벨 줄 ("활동장소" 다음 줄에 값이 오는 경우)
-    if (fieldKeys.includes(line)) {
-      if ((line === '활동날짜' || line === '활동시간') && current && (current.rawLocation || current.leader)) {
-        commitRecord();
-      }
-      if (!current) current = {};
-      pendingKey = line;
-      continue;
-    }
-
-    // 직전 단독 라벨에 대응하는 값 줄
-    if (pendingKey && current) {
-      if (pendingKey === '활동날짜') current.dateText = line;
-      if (pendingKey === '활동시간') current.timeText = line;
-      if (pendingKey === '활동장소') current.rawLocation = line;
-      if (pendingKey === '활동내용') current.topic = line;
-      if (pendingKey === '대표학생') current.leader = line;
-      if (pendingKey === '참가학생') current.members = line;
-      if (pendingKey === '지도교사') current.teacher = line;
-      pendingKey = null;
-    }
-  }
-
-  commitRecord();
   return parsed;
 }
 
 /**
- * 참가학생 문자열에서 고유 학생 인원 수를 계산합니다.
+ * ============================================================================
+ * 5. 월간 달력 팝오버 컴포넌트
+ * ============================================================================
  */
-function countUniqueStudents(rec) {
-  const raw = `${rec.leader || ''}, ${rec.members || ''}`;
-  const tokens = raw
-    .split(/[,/]+/)
-    .map((s) => s.replace(/\s+/g, ''))
-    .filter((s) => s && s !== '없음' && s !== '미상');
-  return new Set(tokens).size || 1;
+function MonthCalendarPopover({ selectedDate, todayStr, recordDatesSet, onSelectDate, onClose }) {
+  const [viewYear, setViewYear] = useState(() => Number(selectedDate.slice(0, 4)));
+  const [viewMonth, setViewMonth] = useState(() => Number(selectedDate.slice(5, 7)) - 1);
+
+  const daysGrid = useMemo(() => {
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < firstDay; i += 1) cells.push(null);
+    for (let d = 1; d <= lastDate; d += 1) {
+      const mStr = String(viewMonth + 1).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      cells.push({ day: d, dateStr: `${viewYear}-${mStr}-${dStr}` });
+    }
+    return cells;
+  }, [viewYear, viewMonth]);
+
+  const handlePrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
+
+  return (
+    <div className="absolute left-0 top-full mt-2 z-50 w-[300px] bg-white border border-[#bdbdbd] rounded-[5px] shadow-lg p-3.5 text-[#222222]">
+      <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-[#e5e7eb]">
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          className="px-2 py-1 text-[13px] font-bold text-[#444444] hover:bg-[#f3f4f6] rounded"
+        >
+          ◀
+        </button>
+        <span className="text-[15px] font-bold">
+          {viewYear}년 {viewMonth + 1}월
+        </span>
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          className="px-2 py-1 text-[13px] font-bold text-[#444444] hover:bg-[#f3f4f6] rounded"
+        >
+          ▶
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 text-center text-[12px] font-bold text-[#6b7280] mb-1">
+        {['일', '월', '화', '수', '목', '금', '토'].map((w, idx) => (
+          <div
+            key={w}
+            className={idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-600' : ''}
+          >
+            {w}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center text-[13px]">
+        {daysGrid.map((cell, idx) => {
+          if (!cell) return <div key={`empty-${idx}`} />;
+          const isSelected = cell.dateStr === selectedDate;
+          const isToday = cell.dateStr === todayStr;
+          const hasRecords = recordDatesSet.has(cell.dateStr);
+          return (
+            <button
+              key={cell.dateStr}
+              type="button"
+              onClick={() => {
+                onSelectDate(cell.dateStr);
+                onClose();
+              }}
+              className={`relative py-1.5 rounded-[4px] font-medium transition-colors ${
+                isSelected
+                  ? 'bg-[#8bc7c0] text-white font-bold'
+                  : isToday
+                  ? 'bg-[#eef8f7] text-[#2f6861] font-bold border border-[#8bc7c0]'
+                  : 'hover:bg-[#f3f4f6] text-[#222222]'
+              }`}
+            >
+              {cell.day}
+              {hasRecords && (
+                <span
+                  className={`block mx-auto mt-0.5 w-1.5 h-1.5 rounded-full ${
+                    isSelected ? 'bg-white' : 'bg-[#d9823b]'
+                  }`}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 pt-2 border-t border-[#e5e7eb] flex items-center justify-between text-[12px]">
+        <button
+          type="button"
+          onClick={() => {
+            onSelectDate(todayStr);
+            onClose();
+          }}
+          className="px-2.5 py-1 rounded bg-[#eef8f7] text-[#2f6861] font-bold hover:bg-[#dff1ef]"
+        >
+          오늘로 이동
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-2.5 py-1 rounded bg-[#f3f4f6] text-[#4b5563] hover:bg-[#e5e7eb]"
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  );
 }
 
+/**
+ * ============================================================================
+ * 6. 메인 애플리케이션 컴포넌트 (공식 과구리 UI + 캠퍼스 전경 + 층별 2단 그리드)
+ * ============================================================================
+ */
 export default function App() {
-  // 1. 접속 시 오늘 날짜 자동 설정 및 밤 12시(00:00) 자동 다음 날 전환 상태
+  // 1. 오늘 날짜 & 자정(00:00) 자동 전환 상태
   const [todayStr, setTodayStr] = useState(() => getLocalTodayStr());
   const [selectedDate, setSelectedDate] = useState(() => getLocalTodayStr());
-  const [midnightBanner, setMidnightBanner] = useState('');
-
-  const todayStrRef = useRef(todayStr);
-  const selectedDateRef = useRef(selectedDate);
-  useEffect(() => {
-    todayStrRef.current = todayStr;
-  }, [todayStr]);
-  useEffect(() => {
-    selectedDateRef.current = selectedDate;
-  }, [selectedDate]);
+  const todayRef = useRef(todayStr);
+  todayRef.current = todayStr;
 
   useEffect(() => {
-    let midnightTimerId = null;
-
-    const checkDayRollover = () => {
-      const currentLocalToday = getLocalTodayStr();
-      const prevToday = todayStrRef.current;
-      if (currentLocalToday !== prevToday) {
-        setTodayStr(currentLocalToday);
-        // 기존 '오늘' 날짜를 보고 있었다면 자정(00:00) 경과 시 자동으로 다음 날(새 오늘)로 전환
-        if (selectedDateRef.current === prevToday) {
-          setSelectedDate(currentLocalToday);
-        }
-        setMidnightBanner(
-          `자정(00:00)이 지나 날짜가 ${formatKoreanDate(currentLocalToday)}로 자동 전환되었습니다.`
-        );
+    const syncMidnightDate = () => {
+      const latestToday = getLocalTodayStr();
+      if (latestToday !== todayRef.current) {
+        setTodayStr(latestToday);
+        setSelectedDate(latestToday);
       }
     };
 
-    const scheduleNextMidnight = () => {
-      const now = new Date();
-      const nextMidnight = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() + 1,
-        0,
-        0,
-        0,
-        100
-      );
-      const delayMs = Math.max(1000, nextMidnight.getTime() - now.getTime());
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      1
+    );
+    const msUntilMidnight = Math.max(1000, nextMidnight.getTime() - now.getTime());
 
-      midnightTimerId = window.setTimeout(() => {
-        checkDayRollover();
-        scheduleNextMidnight();
-      }, delayMs);
-    };
-
-    scheduleNextMidnight();
-    const intervalId = window.setInterval(checkDayRollover, 15000);
-    const onVisibilityChange = () => {
-      if (!document.hidden) checkDayRollover();
-    };
-    window.addEventListener('focus', checkDayRollover);
-    document.addEventListener('visibilitychange', onVisibilityChange);
+    const midnightTimer = window.setTimeout(syncMidnightDate, msUntilMidnight);
+    const intervalTimer = window.setInterval(syncMidnightDate, 15000);
+    window.addEventListener('focus', syncMidnightDate);
 
     return () => {
-      if (midnightTimerId) window.clearTimeout(midnightTimerId);
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', checkDayRollover);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.clearTimeout(midnightTimer);
+      window.clearInterval(intervalTimer);
+      window.removeEventListener('focus', syncMidnightDate);
     };
-  }, []);
+  }, [todayStr]);
 
-  useEffect(() => {
-    if (!midnightBanner) return;
-    const t = window.setTimeout(() => setMidnightBanner(''), 6000);
-    return () => window.clearTimeout(t);
-  }, [midnightBanner]);
-
-  // 2. 탐활 데이터 상태 (localStorage 영속화)
+  // 2. 탐활 데이터 상태 (localStorage 영속화 및 실 위치 ID 재정규화)
   const [records, setRecords] = useState(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((rec) => ({
+            ...rec,
+            roomId: normalizeLocationToRoomId(rec.rawLocation),
+          }));
+        }
       }
     } catch {
       // 스토리지 접근 불가 시 기본 27건 사용
@@ -924,75 +992,55 @@ export default function App() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     } catch {
-      // 용량 초과 등 예외 무시
+      // 저장 실패 무시
     }
   }, [records]);
 
-  // 3. 화면 모드('campus' 전체 학교 지도 | 'building' 건물 내부 평면도) 및 선택 상태
-  const [viewMode, setViewMode] = useState('campus');
+  // 3. UI 탐색 및 필터 상태
+  const [periodFilter, setPeriodFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // 'overview' (캠퍼스 전경 지도) | 'building' (건물 층별 2단 그리드 평면도)
+  const [viewMode, setViewMode] = useState('overview');
   const [selectedBuildingId, setSelectedBuildingId] = useState('seongsil');
   const [selectedFloor, setSelectedFloor] = useState('1F');
   const [selectedRoomId, setSelectedRoomId] = useState('seongsil_1f_coding');
-  const [periodFilter, setPeriodFilter] = useState('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showExternalModal, setShowExternalModal] = useState(false);
 
-  // 달력 팝오버 상태
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [calendarMonth, setCalendarMonth] = useState(() => {
-    const [y, m] = getLocalTodayStr().split('-').map(Number);
-    return { year: y, month: m };
-  });
-
-  // 클립보드 붙여넣기 모달 상태
+  // 모달 상태
   const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
-  const [pasteInput, setPasteInput] = useState('');
+  const [pasteText, setPasteText] = useState('');
   const [pasteStatus, setPasteStatus] = useState(null);
+  const [isExternalModalOpen, setIsExternalModalOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
-  useEffect(() => {
-    const [y, m] = selectedDate.split('-').map(Number);
-    setCalendarMonth({ year: y, month: m });
-  }, [selectedDate]);
-
-  // 건물 진입 핸들러
-  const openBuildingView = (bId, preferredFloor = null, preferredRoomId = null) => {
-    setSelectedBuildingId(bId);
-    const floorKeys = Object.keys(BUILDINGS[bId].floors);
-    const targetFloor =
-      preferredFloor && floorKeys.includes(preferredFloor) ? preferredFloor : floorKeys[0];
-    setSelectedFloor(targetFloor);
-
-    if (preferredRoomId) {
-      setSelectedRoomId(preferredRoomId);
-    } else {
-      const floorObj = BUILDINGS[bId].floors[targetFloor];
-      const defaultRoom = floorObj.bottomRooms[0] || floorObj.topRooms[0];
-      if (defaultRoom) setSelectedRoomId(defaultRoom.id);
-    }
-    setViewMode('building');
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    window.setTimeout(() => setToastMsg(''), 2800);
   };
 
-  // 층 변경 핸들러
-  const handleSelectFloor = (floorKey) => {
-    setSelectedFloor(floorKey);
-    const floorObj = BUILDINGS[selectedBuildingId].floors[floorKey];
-    if (floorObj) {
-      const firstRoom = floorObj.topRooms[0] || floorObj.bottomRooms[0];
-      if (firstRoom) setSelectedRoomId(firstRoom.id);
-    }
-  };
+  // 데이터가 존재하는 날짜 집합
+  const recordDatesSet = useMemo(() => {
+    const s = new Set();
+    records.forEach((r) => s.add(r.date));
+    return s;
+  }, [records]);
 
-  // 현재 날짜 + 시간대 필터링된 탐활 목록
+  // 선택된 날짜 + 면학 시간대 필터링 결과
   const activeRecords = useMemo(() => {
     return records.filter((rec) => {
       if (rec.date !== selectedDate) return false;
-      if (periodFilter !== 'ALL' && !rec.periods.includes(periodFilter)) return false;
+      if (periodFilter !== 'ALL') {
+        const hasPeriod =
+          Array.isArray(rec.periods) && rec.periods.includes(periodFilter);
+        if (!hasPeriod) return false;
+      }
       return true;
     });
   }, [records, selectedDate, periodFilter]);
 
-  // 실별 배정 레코드 그룹화
-  const recordsByRoom = useMemo(() => {
+  // 실별 배정 레코드 그룹화 (O(1) 조회용)
+  const activitiesByRoom = useMemo(() => {
     const map = {};
     activeRecords.forEach((rec) => {
       if (!map[rec.roomId]) map[rec.roomId] = [];
@@ -1003,157 +1051,181 @@ export default function App() {
 
   // 상단 요약 통계 (전체 탐활 건수, 사용 중인 실 수, 중복 사용실 수)
   const summaryStats = useMemo(() => {
-    const entries = Object.entries(recordsByRoom);
+    const entries = Object.entries(activitiesByRoom);
     return {
       totalCount: activeRecords.length,
       usedRooms: entries.length,
       conflictRooms: entries.filter(([, list]) => list.length >= 2).length,
     };
-  }, [activeRecords, recordsByRoom]);
+  }, [activeRecords, activitiesByRoom]);
 
-  // 건물별 요약 통계 (캠퍼스 지도 배지용)
-  const buildingSummaries = useMemo(() => {
-    const stats = {};
-    Object.keys(BUILDINGS).forEach((bId) => {
+  // 건물별·층별 요약 통계 및 SVG 배지 속성 사전 계산
+  const { buildingStats, floorStats, buildingBadges } = useMemo(() => {
+    const bStats = {};
+    const fStats = {};
+    const bBadges = {};
+
+    Object.values(BUILDINGS).forEach((b) => {
       let teams = 0;
       let conflictRooms = 0;
-      Object.entries(recordsByRoom).forEach(([rId, list]) => {
-        const meta = ROOM_META_MAP[rId];
-        if (meta && meta.buildingId === bId) {
-          teams += list.length;
-          if (list.length >= 2) conflictRooms += 1;
-        }
+      fStats[b.id] = {};
+      Object.entries(b.floors).forEach(([floorKey, floorObj]) => {
+        const floorRooms = [...floorObj.topRooms, ...floorObj.bottomRooms];
+        let floorTeams = 0;
+        let floorConflict = false;
+        floorRooms.forEach((r) => {
+          const count = activitiesByRoom[r.id]?.length || 0;
+          if (count > 0) {
+            floorTeams += count;
+            teams += count;
+          }
+          if (count >= 2) {
+            floorConflict = true;
+            conflictRooms += 1;
+          }
+        });
+        fStats[b.id][floorKey] = {
+          hasTeams: floorTeams > 0,
+          hasConflict: floorConflict,
+          teams: floorTeams,
+        };
       });
-      stats[bId] = { teams, conflictRooms };
+
+      bStats[b.id] = { teams, conflictRooms };
+      bBadges[b.id] = {
+        pillColor:
+          conflictRooms > 0 ? '#d9823b' : teams > 0 ? '#5ea69e' : '#6b7280',
+        statusText:
+          conflictRooms > 0
+            ? `중복 사용실 ${conflictRooms}곳 · ${teams}팀`
+            : teams > 0
+            ? `${teams}팀 사용 중`
+            : '현재 비어 있음',
+      };
     });
-    return stats;
-  }, [recordsByRoom]);
+
+    return { buildingStats: bStats, floorStats: fStats, buildingBadges: bBadges };
+  }, [activitiesByRoom]);
 
   // 통합 검색 결과
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    return activeRecords.filter((rec) => {
-      const meta = ROOM_META_MAP[rec.roomId];
-      const target = [
-        rec.leader,
-        rec.members,
-        rec.topic,
-        rec.teacher,
-        rec.rawLocation,
-        meta?.name || '',
-        meta?.buildingName || '',
-      ]
-        .join(' ')
-        .toLowerCase();
-      return target.includes(q);
+    const results = [];
+    activeRecords.forEach((rec) => {
+      const meta = ROOM_BY_ID[rec.roomId];
+      const roomLabel = meta
+        ? `${meta.buildingName} ${meta.floor} ${meta.name}`
+        : rec.rawLocation;
+      const haystack = `${rec.leader} ${rec.members} ${rec.topic} ${rec.rawLocation} ${roomLabel}`.toLowerCase();
+      if (haystack.includes(q)) {
+        results.push({ rec, meta, roomLabel });
+      }
     });
-  }, [activeRecords, searchQuery]);
+    return results;
+  }, [searchQuery, activeRecords]);
 
-  // 달력 날짜별 등록 건수
-  const countByDate = useMemo(() => {
-    const map = {};
-    records.forEach((r) => {
-      map[r.date] = (map[r.date] || 0) + 1;
-    });
-    return map;
-  }, [records]);
+  // 건물 진입 및 층/실 선택 핸들러
+  const openBuildingView = (buildingId, preferredFloor, preferredRoomId) => {
+    const b = BUILDINGS[buildingId];
+    if (!b) return;
+    const floorKeys = Object.keys(b.floors);
+    const targetFloor =
+      preferredFloor && b.floors[preferredFloor]
+        ? preferredFloor
+        : floorKeys.find((fk) => floorStats[buildingId]?.[fk]?.hasTeams) ||
+          floorKeys[0];
 
-  const calendarDays = useMemo(() => {
-    const { year, month } = calendarMonth;
-    const firstWeekday = new Date(year, month - 1, 1).getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const cells = [];
-    for (let i = 0; i < firstWeekday; i += 1) cells.push(null);
-    for (let d = 1; d <= daysInMonth; d += 1) {
-      cells.push({
-        day: d,
-        dateStr: `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
-      });
-    }
-    return cells;
-  }, [calendarMonth]);
+    const floorObj = b.floors[targetFloor];
+    const allRoomsOnFloor = [...floorObj.topRooms, ...floorObj.bottomRooms];
+    const targetRoom =
+      preferredRoomId && allRoomsOnFloor.some((r) => r.id === preferredRoomId)
+        ? preferredRoomId
+        : allRoomsOnFloor.find((r) => (activitiesByRoom[r.id]?.length || 0) > 0)
+            ?.id || allRoomsOnFloor[0]?.id;
 
-  // 붙여넣기 실시간 미리보기 파싱 결과
-  const liveParsedPreview = useMemo(() => {
-    return parseGwaguriClipboardText(pasteInput, selectedDate);
-  }, [pasteInput, selectedDate]);
+    setSelectedBuildingId(buildingId);
+    setSelectedFloor(targetFloor);
+    if (targetRoom) setSelectedRoomId(targetRoom);
+    setViewMode('building');
+  };
 
-  const handleConfirmPaste = () => {
-    if (liveParsedPreview.length === 0) {
-      setPasteStatus({
-        type: 'error',
-        message: '인식된 탐활 내역이 없습니다. 과구리 [탐활서 확인] 표 전체를 복사해 붙여넣어 주세요.',
-      });
+  const handleSelectFloor = (floorKey) => {
+    setSelectedFloor(floorKey);
+    const floorObj = BUILDINGS[selectedBuildingId].floors[floorKey];
+    const allRooms = [...floorObj.topRooms, ...floorObj.bottomRooms];
+    const firstActive = allRooms.find(
+      (r) => (activitiesByRoom[r.id]?.length || 0) > 0
+    );
+    setSelectedRoomId(firstActive ? firstActive.id : allRooms[0]?.id || '');
+  };
+
+  // 붙여넣기 미리보기 파싱
+  const previewParsed = useMemo(() => parseGwaguriText(pasteText), [pasteText]);
+
+  const handleApplyPastedData = () => {
+    if (previewParsed.length === 0) {
+      setPasteStatus('인식된 탐활 내역이 없습니다. 과구리 화면의 텍스트를 그대로 복사해 붙여넣어 주세요.');
       return;
     }
-
-    setRecords((prev) => [...liveParsedPreview, ...prev]);
-    const first = liveParsedPreview[0];
-    setSelectedDate(first.date);
-    const meta = ROOM_META_MAP[first.roomId];
-    if (meta && meta.buildingId !== 'external') {
-      openBuildingView(meta.buildingId, meta.floor, meta.id);
-    } else {
-      setShowExternalModal(true);
-    }
-
-    setPasteStatus({
-      type: 'success',
-      message: `${liveParsedPreview.length}건의 탐활 내역을 평면도에 반영했습니다.`,
-    });
-    setPasteInput('');
+    setRecords(previewParsed);
+    const firstDate = previewParsed[0].date;
+    if (firstDate) setSelectedDate(firstDate);
     setIsPasteModalOpen(false);
+    setPasteText('');
+    setPasteStatus(null);
+    showToast(`탐활 데이터 ${previewParsed.length}건이 지도에 반영되었습니다.`);
   };
 
-  const handleRestoreDefaults = () => {
+  const handleResetDefaultData = () => {
     setRecords(DEFAULT_RECORDS);
-    setPasteStatus({
-      type: 'success',
-      message: '기본 과구리 실데이터(27건)가 복원되었습니다.',
-    });
+    setSelectedDate(todayStr);
+    setIsPasteModalOpen(false);
+    setPasteText('');
+    setPasteStatus(null);
+    showToast('기본 과구리 탐활 데이터 27건으로 복원되었습니다.');
   };
 
-  const externalRecords = recordsByRoom.external || [];
+  const externalRecords = activitiesByRoom.external || [];
   const currentBuilding = BUILDINGS[selectedBuildingId];
   const currentFloorObj = currentBuilding.floors[selectedFloor];
-  const selectedRoomMeta = ROOM_META_MAP[selectedRoomId] || {
+  const selectedRoomMeta = ROOM_BY_ID[selectedRoomId] || {
     id: selectedRoomId,
     buildingName: '성실관',
     floor: '1F',
     name: '코딩실',
     sub: '구 멀티실',
   };
-  const selectedRoomRecords = recordsByRoom[selectedRoomId] || [];
+  const selectedRoomRecords = activitiesByRoom[selectedRoomId] || [];
 
   // 층별 평면도 내 개별 실 카드 렌더링
   const renderRoomCard = (room) => {
-    const list = recordsByRoom[room.id] || [];
+    const list = activitiesByRoom[room.id] || [];
     const teamCount = list.length;
     const isSelected = selectedRoomId === room.id;
 
     let cardColorClass =
-      'bg-white border-[#bdbdbd] text-[#111111] hover:border-[#8bc7c0]';
+      'bg-white border-[#d4d4d4] text-[#111111] hover:border-[#8bc7c0]';
     let statusBadge = (
-      <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-[3px] bg-[#f3f4f6] text-[#6b7280]">
+      <span className="inline-block text-[12px] font-medium px-2.5 py-0.5 rounded-[4px] bg-[#f0f0f0] text-[#6b7280]">
         비어 있음
       </span>
     );
 
     if (teamCount === 1) {
       cardColorClass =
-        'bg-[#eef8f7] border-[#8bc7c0] text-[#183d39] hover:bg-[#e1f3f0]';
+        'bg-[#eef8f7] border-[#8bc7c0] text-[#183d39] hover:bg-[#e3f4f1]';
       statusBadge = (
-        <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-[3px] bg-[#d6efec] text-[#245e58]">
+        <span className="inline-block text-[12px] font-bold px-2.5 py-0.5 rounded-[4px] bg-[#dff1ef] text-[#2f6861]">
           1팀
         </span>
       );
     } else if (teamCount >= 2) {
       cardColorClass =
-        'bg-[#fdf4ec] border-[#d9823b] text-[#7c2d12] hover:bg-[#faeadc]';
+        'bg-[#fff7ed] border-[#e08b3e] text-[#7c2d12] hover:bg-[#ffedd5]';
       statusBadge = (
-        <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-[3px] bg-[#d9823b] text-white">
-          {teamCount}팀 중복
+        <span className="inline-block text-[12px] font-bold px-2.5 py-0.5 rounded-[4px] bg-[#fdebd8] text-[#b45309]">
+          {teamCount}팀
         </span>
       );
     }
@@ -1163,33 +1235,34 @@ export default function App() {
         key={room.id}
         type="button"
         onClick={() => setSelectedRoomId(room.id)}
-        className={`w-full text-left min-h-[115px] p-3.5 rounded-[4px] border transition-all flex flex-col justify-between ${cardColorClass} ${
-          isSelected ? 'ring-2 ring-[#111111] shadow-sm' : ''
+        className={`w-full text-left min-h-[122px] p-4 rounded-[6px] border transition-all flex flex-col justify-between ${cardColorClass} ${
+          isSelected ? 'ring-2 ring-[#111111] shadow-xs' : ''
         }`}
       >
         <div>
-          <div className="flex items-start justify-between gap-1.5">
-            <span className="text-[15px] font-bold leading-snug tracking-tight break-keep">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[16px] font-bold leading-snug tracking-tight break-keep">
               {room.name}
             </span>
             <span className="shrink-0">{statusBadge}</span>
           </div>
           {room.sub && (
-            <div className="text-[12px] text-[#6b7280] mt-0.5 leading-tight">
+            <div className="text-[13px] text-[#6b7280] mt-1 leading-tight">
               {room.sub}
             </div>
           )}
         </div>
 
-        <div className="mt-3 pt-2 border-t border-black/5 text-[12px]">
+        <div className="mt-3.5 pt-2.5 border-t border-black/5 text-[13.5px]">
           {teamCount === 0 ? (
             <span className="text-[#9ca3af]">신청 내역 없음</span>
+          ) : teamCount === 1 ? (
+            <div className="truncate font-medium text-[#222222]">
+              {list[0].leader} ({countUniqueStudents(list[0])}명)
+            </div>
           ) : (
-            <div className="truncate font-medium text-[#374151]">
-              {list[0].leader}
-              {teamCount > 1
-                ? ` 외 ${teamCount - 1}팀`
-                : ` (${countUniqueStudents(list[0])}명)`}
+            <div className="truncate font-medium text-[#7c2d12]">
+              {list[0].leader} 외 {teamCount - 1}팀 중복 사용
             </div>
           )}
         </div>
@@ -1201,81 +1274,78 @@ export default function App() {
     <div
       className="min-h-screen bg-[#f5f5f5] text-[#111111]"
       style={{
-        fontFamily: "'Noto Sans KR', 'Malgun Gothic', sans-serif",
+        fontFamily:
+          '"Noto Sans KR", "Malgun Gothic", "맑은 고딕", AppleSDGothicNeo, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      {/* 1. 공식 과구리 상단 민트 헤더 (실제 과구리 비율: 높이 73px, 너비 1335px, 순수 #8bc7c0) */}
-      <header className="bg-[#8bc7c0] text-white h-[73px]">
-        <div className="max-w-[1335px] mx-auto px-3 h-full flex items-center justify-between gap-3">
-          <div className="flex items-center overflow-hidden">
-            {/* 공식 과구리 겹침 사각형 로고 아이콘 (38px x 38px) */}
+      {/* ====================================================================
+          1. 공식 과구리(jshsus.kr) 상단 민트 바 (높이 73px, #8bc7c0 순수 민트색)
+         ==================================================================== */}
+      <header className="w-full h-[73px] bg-[#8bc7c0] border-b border-[#8ac6bf]">
+        <div className="max-w-[1340px] h-full mx-auto px-6 flex items-center justify-between">
+          {/* 좌측: 공식 과구리 겹침 사각형 로고(38x38px) + 과구리 타이틀 + 소개 | 학생부 전산시스템 */}
+          <div className="flex items-center">
             <button
               type="button"
-              onClick={() => setViewMode('campus')}
-              className="flex items-center text-left focus:outline-none shrink-0"
+              onClick={() => setViewMode('overview')}
+              className="flex items-center gap-3 text-left focus:outline-none"
             >
               <svg
                 width="38"
                 height="38"
                 viewBox="0 0 38 38"
-                className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
                 aria-hidden="true"
+                className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.22)]"
               >
-                <defs>
-                  <clipPath id="gwaguriLogoClip">
-                    <rect x="0" y="0" width="38" height="38" rx="3" />
-                  </clipPath>
-                </defs>
-                <g clipPath="url(#gwaguriLogoClip)">
-                  {/* 좌상단 민트-그레이 정사각형 */}
-                  <rect x="0" y="0" width="29" height="29" fill="#7ea9a4" />
-                  {/* 우상단 짙은 회색 세로 바 */}
-                  <rect x="29" y="0" width="9" height="29" fill="#424242" />
-                  {/* 좌하단 짙은 회색 가로 바 */}
-                  <rect x="0" y="29" width="29" height="9" fill="#424242" />
-                  {/* 우하단 겹치는 사각형 */}
-                  <rect x="19" y="19" width="19" height="19" fill="#99b5b3" />
-                  {/* 중앙 교차 밝은 민트 영역 */}
-                  <rect x="19" y="19" width="10" height="10" fill="#aad3d0" />
-                  {/* 교차 사각형 상단·좌측 1px 밝은 테두리 */}
-                  <path
-                    d="M 19.5 38 L 19.5 19.5 L 38 19.5"
-                    fill="none"
-                    stroke="#cde4e2"
-                    strokeWidth="1"
-                  />
-                </g>
+                <rect x="0" y="0" width="38" height="38" rx="3" fill="#424242" />
+                <rect x="0" y="0" width="31" height="31" rx="2" fill="#7ea9a4" />
+                <rect x="20" y="20" width="18" height="18" rx="1.5" fill="#99b5b3" />
+                <rect x="20" y="20" width="11" height="11" fill="#aad3d0" />
               </svg>
-              <span className="ml-[14px] text-[30px] font-normal text-white tracking-[-0.02em] leading-none [text-shadow:0_1px_2px_rgba(0,0,0,0.22)]">
+
+              <span
+                className="text-[28px] font-bold text-white tracking-[-0.03em] leading-none"
+                style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.28)' }}
+              >
                 과구리
               </span>
             </button>
 
-            <div className="hidden sm:flex items-center text-[15px] font-light text-white/95 leading-none">
-              <span className="ml-[18px]">소개</span>
-              <span className="mx-[10px] text-white/75">|</span>
+            <div className="hidden sm:flex items-center gap-2.5 ml-4 text-[13.5px] text-white font-normal tracking-[-0.01em]">
+              <button
+                type="button"
+                onClick={() => showToast('전남과학고등학교 학생부 전산시스템 과구리입니다.')}
+                className="hover:underline"
+              >
+                소개
+              </button>
+              <span className="opacity-80">|</span>
               <span>학생부 전산시스템</span>
             </div>
           </div>
 
+          {/* 우측: 공식 과구리 헤더 버튼 스타일 */}
           <button
             type="button"
             onClick={() => {
               setPasteStatus(null);
               setIsPasteModalOpen(true);
             }}
-            className="border border-[#5c8d87] bg-transparent hover:bg-white/15 text-[#1e3835] rounded-[3px] px-3 py-1 text-[13px] font-normal transition-colors whitespace-nowrap shrink-0"
+            className="border border-[#4c7a75] bg-transparent hover:bg-white/15 text-[#1e3835] rounded-[3px] px-3 py-1 text-[13px] font-normal transition-colors whitespace-nowrap shrink-0"
           >
             탐활서 데이터 붙여넣기
           </button>
         </div>
       </header>
 
-      {/* 2. 공식 과구리 2줄 글로벌 내비게이션 바 (높이 113px, 20px 폰트, 기존 메뉴 + 탐활 현황) */}
-      <nav className="bg-white border-b border-[#d8d8d8] text-[16px] md:text-[20px] font-normal text-[#111111] leading-[24px]">
-        <div className="max-w-[1335px] mx-auto px-3 min-h-[113px] py-3.5 flex flex-col justify-center">
-          {/* 1행: 실제 과구리 8개 메뉴 균등 배치 */}
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+      {/* ====================================================================
+          2. 공식 과구리 2줄 상단 메뉴 바 (총 높이 113px, 20px 볼드)
+         ==================================================================== */}
+      <nav className="w-full bg-white border-b border-[#d8d8d8]">
+        <div className="max-w-[1340px] mx-auto px-6 py-[16px]">
+          <div className="flex flex-wrap items-center justify-center gap-x-[68px] gap-y-2 text-[20px] font-bold text-[#111111] tracking-[-0.02em] leading-[24px]">
             {[
               '공지사항',
               '탐활서',
@@ -1285,114 +1355,118 @@ export default function App() {
               'JBS',
               '분실물',
               '대포',
-            ].map((item) => (
-              <span
-                key={item}
-                className="cursor-pointer hover:text-[#4b968e] transition-colors whitespace-nowrap"
+            ].map((menu) => (
+              <button
+                key={menu}
+                type="button"
+                onClick={() => {
+                  if (menu === '탐활서') {
+                    setPasteStatus(null);
+                    setIsPasteModalOpen(true);
+                  } else {
+                    showToast(`'${menu}' 메뉴는 기존 과구리(jshsus.kr)에서 제공됩니다.`);
+                  }
+                }}
+                className="hover:text-[#5ea69e] transition-colors py-1"
               >
-                {item}
-              </span>
+                {menu}
+              </button>
             ))}
           </div>
 
-          {/* 2행: 실제 과구리 4개 메뉴 + 탐활 현황 추가 */}
-          <div className="mt-[18px] md:pl-[44px] flex flex-wrap items-center gap-x-8 md:gap-x-[92px] gap-y-2">
+          <div className="mt-[18px] flex flex-wrap items-center justify-center gap-x-[68px] gap-y-2 text-[20px] font-bold tracking-[-0.02em] leading-[24px]">
             {[
-              { label: '기상곡 신청', active: false },
-              { label: '세특 바이트 계산기', active: false },
-              { label: '감사챌린지', active: false },
-              { label: '잔반제로', active: false },
-              { label: '탐활 현황', active: true },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => item.active && setViewMode('campus')}
-                className={`whitespace-nowrap transition-colors ${
-                  item.active
-                    ? 'text-[#111111] font-medium border-b-[3px] border-[#8bc7c0] pb-[4px]'
-                    : 'text-[#111111] hover:text-[#4b968e] pb-[7px]'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+              '기상곡 신청',
+              '세특 바이트 계산기',
+              '감사챌린지',
+              '잔반제로',
+              '탐활 현황',
+            ].map((menu) => {
+              const isActive = menu === '탐활 현황';
+              return (
+                <button
+                  key={menu}
+                  type="button"
+                  onClick={() => {
+                    if (isActive) {
+                      setViewMode('overview');
+                    } else {
+                      showToast(`'${menu}' 메뉴는 기존 과구리(jshsus.kr)에서 제공됩니다.`);
+                    }
+                  }}
+                  className={`py-1 transition-colors ${
+                    isActive
+                      ? 'text-[#5ea69e] border-b-[3px] border-[#8bc7c0]'
+                      : 'text-[#111111] hover:text-[#5ea69e]'
+                  }`}
+                >
+                  {menu}
+                </button>
+              );
+            })}
           </div>
         </div>
       </nav>
 
-      {/* 3. 메인 컨테이너 (#f5f5f5 배경 위 페이지 제목 + 1px 검정선 + 과구리 표준 화이트 카드) */}
-      <main className="max-w-[1335px] mx-auto px-3 pt-[38px] pb-16">
-        {/* 자정(00:00) 자동 날짜 전환 안내 (자정 경과 시에만 일시 표시) */}
-        {midnightBanner && (
-          <div className="mb-5 px-4 py-2.5 bg-[#eef8f7] border border-[#8bc7c0] text-[#245e58] text-[14px] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.06)] flex items-center justify-between">
-            <span>{midnightBanner}</span>
-            <button
-              type="button"
-              onClick={() => setMidnightBanner('')}
-              className="font-bold ml-3 hover:underline"
-            >
-              닫기
-            </button>
-          </div>
-        )}
-
-        {/* 공식 과구리 페이지 H1 제목 ('탐활서 확인'과 동일한 크기·굵기·1px 검정 하단선) */}
-        <div className="border-b border-[#000000] pb-[12px] mb-[22px] flex flex-wrap items-end justify-between gap-3">
-          <h1 className="text-[34px] font-bold text-[#111111] tracking-[-0.03em] leading-none">
+      {/* ====================================================================
+          3. 메인 본문 영역 (#f5f5f5 배경 위 직접 배치된 제목 + 1px 검정선 + 카드)
+         ==================================================================== */}
+      <main className="max-w-[1340px] mx-auto px-6 pt-[36px] pb-14">
+        <div className="flex flex-wrap items-end justify-between gap-4 pb-[11px] border-b border-[#000000]">
+          <h1 className="text-[34px] font-bold tracking-[-0.03em] text-[#111111] leading-[43px]">
             탐활 현황
           </h1>
-          <div className="flex items-center gap-4 text-[13px] text-[#4b5563]">
+
+          <div className="flex items-center gap-4 text-[13px] text-[#555555] pb-1">
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-[2px] bg-white border border-[#bdbdbd] inline-block" />
+              <span className="w-3 h-3 rounded-[2px] border border-[#bdbdbd] bg-white inline-block" />
               비어 있음
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-[2px] bg-[#eef8f7] border border-[#8bc7c0] inline-block" />
+              <span className="w-3 h-3 rounded-[2px] border border-[#8bc7c0] bg-[#eef8f7] inline-block" />
               1팀 사용 중
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-[2px] bg-[#fdf4ec] border border-[#d9823b] inline-block" />
+              <span className="w-3 h-3 rounded-[2px] border border-[#e08b3e] bg-[#fff7ed] inline-block" />
               2팀 이상 중복
             </span>
           </div>
         </div>
 
-        {/* 4. 과구리 표준 카드 1: 날짜 내비게이션 · 요약 통계 · 면학 필터 · 통합 검색 */}
-        <section className="bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] px-6 py-4 mb-[20px]">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="relative flex items-center gap-3">
+        {/* 상단 컨트롤 카드 */}
+        <div className="mt-[22px] bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#e5e7eb]">
+            <div className="relative flex items-center gap-2.5">
               <button
                 type="button"
+                onClick={() => setSelectedDate((prev) => addDays(prev, -1))}
                 aria-label="이전 날짜"
-                onClick={() => setSelectedDate((d) => shiftDateStr(d, -1))}
-                className="w-8 h-8 rounded-[4px] border border-[#bdbdbd] text-[#374151] hover:bg-[#f5f5f5] font-bold flex items-center justify-center"
+                className="w-8 h-8 rounded-[4px] border border-[#bdbdbd] bg-white hover:bg-[#f3f4f6] flex items-center justify-center text-[#374151] font-bold"
               >
                 &lt;
               </button>
 
-              <span className="text-[24px] font-bold text-[#111111] tracking-tight">
+              <span className="text-[22px] font-bold text-[#111111] tracking-tight px-1">
                 {formatKoreanDate(selectedDate)}
               </span>
 
               <button
                 type="button"
-                onClick={() => {
-                  const latest = getLocalTodayStr();
-                  setTodayStr(latest);
-                  setSelectedDate(latest);
-                  setIsCalendarOpen(false);
-                }}
-                className="bg-[#eef8f7] text-[#245e58] border border-[#8bc7c0] px-2.5 py-1 rounded-[4px] text-[13px] font-bold hover:bg-[#dff2ef] transition-colors"
+                onClick={() => setSelectedDate(todayStr)}
+                className={`px-2.5 py-1 rounded-[4px] text-[12px] font-bold border transition-colors ${
+                  selectedDate === todayStr
+                    ? 'bg-[#eef8f7] text-[#2f6861] border-[#8bc7c0]'
+                    : 'bg-white text-[#4b5563] border-[#bdbdbd] hover:bg-[#f3f4f6]'
+                }`}
               >
                 오늘
               </button>
 
               <button
                 type="button"
+                onClick={() => setSelectedDate((prev) => addDays(prev, 1))}
                 aria-label="다음 날짜"
-                onClick={() => setSelectedDate((d) => shiftDateStr(d, 1))}
-                className="bg-[#d9823b] text-white w-8 h-8 rounded-full font-bold hover:bg-[#c5702b] transition-colors flex items-center justify-center shadow-xs"
+                className="w-8 h-8 rounded-full bg-[#d9823b] hover:bg-[#c5702b] text-white flex items-center justify-center font-bold shadow-2xs"
               >
                 &gt;
               </button>
@@ -1400,127 +1474,54 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsCalendarOpen((o) => !o)}
-                className="border border-[#bdbdbd] px-3 py-1.5 rounded-[4px] text-[14px] text-[#374151] hover:bg-[#f9fafb] font-medium"
+                className="ml-1 px-3 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-white hover:bg-[#f3f4f6] text-[13px] font-medium text-[#222222] flex items-center gap-1.5"
               >
-                달력
+                <span>달력</span>
               </button>
 
-              {/* 월간 달력 팝오버 */}
               {isCalendarOpen && (
-                <div className="absolute left-0 top-full mt-2 z-30 w-[280px] bg-white border border-[#9ca3af] rounded-[5px] shadow-lg p-3.5">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCalendarMonth((prev) =>
-                          prev.month === 1
-                            ? { year: prev.year - 1, month: 12 }
-                            : { year: prev.year, month: prev.month - 1 }
-                        )
-                      }
-                      className="px-2 py-0.5 text-xs border border-[#bdbdbd] rounded-[3px] hover:bg-[#f3f4f6]"
-                    >
-                      이전
-                    </button>
-                    <span className="text-[14px] font-bold text-[#111111]">
-                      {calendarMonth.year}년 {calendarMonth.month}월
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCalendarMonth((prev) =>
-                          prev.month === 12
-                            ? { year: prev.year + 1, month: 1 }
-                            : { year: prev.year, month: prev.month + 1 }
-                        )
-                      }
-                      className="px-2 py-0.5 text-xs border border-[#bdbdbd] rounded-[3px] hover:bg-[#f3f4f6]"
-                    >
-                      다음
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#6b7280] mb-1">
-                    <span>일</span>
-                    <span>월</span>
-                    <span>화</span>
-                    <span>수</span>
-                    <span>목</span>
-                    <span>금</span>
-                    <span>토</span>
-                  </div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-[12px]">
-                    {calendarDays.map((cell, idx) => {
-                      if (!cell) return <div key={`blank-${idx}`} />;
-                      const isSel = cell.dateStr === selectedDate;
-                      const isTod = cell.dateStr === todayStr;
-                      const hasData = (countByDate[cell.dateStr] || 0) > 0;
-                      return (
-                        <button
-                          key={cell.dateStr}
-                          type="button"
-                          onClick={() => {
-                            setSelectedDate(cell.dateStr);
-                            setIsCalendarOpen(false);
-                          }}
-                          className={`py-1 rounded-[3px] flex flex-col items-center ${
-                            isSel
-                              ? 'bg-[#8bc7c0] text-white font-bold'
-                              : isTod
-                              ? 'border border-[#8bc7c0] text-[#245e58] font-bold'
-                              : 'hover:bg-[#f3f4f6] text-[#374151]'
-                          }`}
-                        >
-                          <span>{cell.day}</span>
-                          <span
-                            className={`w-1 h-1 rounded-full mt-0.5 ${
-                              hasData
-                                ? isSel
-                                  ? 'bg-white'
-                                  : 'bg-[#d9823b]'
-                                : 'bg-transparent'
-                            }`}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <MonthCalendarPopover
+                  selectedDate={selectedDate}
+                  todayStr={todayStr}
+                  recordDatesSet={recordDatesSet}
+                  onSelectDate={(d) => setSelectedDate(d)}
+                  onClose={() => setIsCalendarOpen(false)}
+                />
               )}
             </div>
 
-            {/* 우측: 요약 통계 + 면학 시간 필터 탭 */}
             <div className="flex flex-wrap items-center gap-4">
-              <div className="text-[15px] text-[#374151]">
-                전체 탐활 <strong className="text-[#111111]">{summaryStats.totalCount}건</strong>
-                <span className="mx-2 text-[#d1d5db]">|</span>
-                사용 중인 실{' '}
-                <strong className="text-[#245e58]">{summaryStats.usedRooms}곳</strong>
-                <span className="mx-2 text-[#d1d5db]">|</span>
-                중복 사용실{' '}
-                <strong
-                  className={
-                    summaryStats.conflictRooms > 0 ? 'text-[#d9823b]' : 'text-[#111111]'
-                  }
-                >
-                  {summaryStats.conflictRooms}곳
-                </strong>
+              <div className="flex items-center gap-3 text-[14px] text-[#374151]">
+                <span>
+                  전체 탐활 <strong className="font-bold text-[#111111]">{summaryStats.totalCount}건</strong>
+                </span>
+                <span className="text-[#d1d5db]">|</span>
+                <span>
+                  사용 중인 실 <strong className="font-bold text-[#2f6861]">{summaryStats.usedRooms}곳</strong>
+                </span>
+                <span className="text-[#d1d5db]">|</span>
+                <span>
+                  중복 사용실 <strong className="font-bold text-[#d9823b]">{summaryStats.conflictRooms}곳</strong>
+                </span>
               </div>
 
-              <div className="inline-flex border border-[#bdbdbd] rounded-[4px] overflow-hidden">
+              <div className="inline-flex rounded-[4px] border border-[#bdbdbd] overflow-hidden text-[13px]">
                 {[
-                  { key: 'ALL', label: '전체 시간' },
-                  { key: '1면학', label: '1면학' },
-                  { key: '2면학', label: '2면학' },
-                  { key: '3면학', label: '3면학' },
-                ].map((tab) => (
+                  { id: 'ALL', label: '전체 시간' },
+                  { id: '1면학', label: '1면학' },
+                  { id: '2면학', label: '2면학' },
+                  { id: '3면학', label: '3면학' },
+                ].map((tab, idx) => (
                   <button
-                    key={tab.key}
+                    key={tab.id}
                     type="button"
-                    onClick={() => setPeriodFilter(tab.key)}
-                    className={`px-3 py-1.5 text-[13px] transition-colors ${
-                      periodFilter === tab.key
+                    onClick={() => setPeriodFilter(tab.id)}
+                    className={`px-3 py-1.5 font-medium transition-colors ${
+                      idx > 0 ? 'border-l border-[#bdbdbd]' : ''
+                    } ${
+                      periodFilter === tab.id
                         ? 'bg-[#8bc7c0] text-white font-bold'
-                        : 'bg-white text-[#374151] hover:bg-[#f9fafb]'
+                        : 'bg-white text-[#374151] hover:bg-[#f3f4f6]'
                     }`}
                   >
                     {tab.label}
@@ -1530,742 +1531,633 @@ export default function App() {
             </div>
           </div>
 
-          {/* 하단 줄: 안내 문구 + 통합 검색 바 */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 mt-3 border-t border-[#eeeeee]">
+          <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[14px] text-[#4b5563]">
               건물을 클릭하면 층별 평면도와 사용 중인 팀 현황을 확인할 수 있습니다.
             </p>
 
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="학생 이름, 학번, 실 이름 검색..."
-                className="w-72 border border-[#bdbdbd] rounded-[4px] px-3 py-1.5 text-[14px] focus:outline-none focus:border-[#8bc7c0]"
-              />
-              {searchQuery && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {externalRecords.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#111111] text-sm"
+                  onClick={() => setIsExternalModalOpen(true)}
+                  className="px-3 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-[#f8fafc] hover:bg-[#f1f5f9] text-[13px] font-medium text-[#334155] shrink-0"
                 >
-                  ×
+                  교외·기타 장소 ({externalRecords.length}건)
                 </button>
               )}
 
-              {/* 검색어 입력 시 즉시 이동 결과 드롭다운 */}
-              {searchQuery.trim() !== '' && (
-                <div className="absolute right-0 top-full mt-1.5 z-30 w-80 sm:w-96 bg-white border border-[#9ca3af] rounded-[5px] shadow-lg max-h-72 overflow-y-auto">
-                  <div className="px-3 py-2 bg-[#f8f9fa] border-b border-[#e5e7eb] text-[12px] font-bold text-[#374151]">
-                    검색 결과 ({searchResults.length}건)
-                  </div>
-                  {searchResults.length === 0 ? (
-                    <div className="p-3 text-[13px] text-[#6b7280]">
-                      선택된 날짜에 일치하는 내역이 없습니다.
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-[#f1f5f9]">
-                      {searchResults.map((rec) => {
-                        const meta = ROOM_META_MAP[rec.roomId];
-                        return (
-                          <button
-                            key={rec.id}
-                            type="button"
-                            onClick={() => {
-                              if (meta && meta.buildingId !== 'external') {
-                                openBuildingView(meta.buildingId, meta.floor, meta.id);
-                              } else {
-                                setShowExternalModal(true);
-                              }
-                              setSearchQuery('');
-                            }}
-                            className="w-full text-left px-3 py-2.5 hover:bg-[#eef8f7] transition-colors"
-                          >
-                            <div className="flex items-center justify-between text-[13px] font-bold text-[#111111]">
-                              <span>
-                                {meta
-                                  ? `${meta.buildingName} ${meta.floor} · ${meta.name}`
-                                  : rec.rawLocation}
-                              </span>
-                              <span className="text-[12px] text-[#245e58]">{rec.leader}</span>
-                            </div>
-                            <div className="text-[12px] text-[#4b5563] truncate mt-0.5">
-                              {rec.topic}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+              <div className="relative flex-1 sm:w-[290px]">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="학생 이름, 학번, 실 이름 검색..."
+                  className="w-full pl-3.5 pr-8 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-[#fafafa] focus:bg-white focus:border-[#8bc7c0] focus:outline-none text-[13.5px] text-[#111111]"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#111111] text-[12px]"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {searchQuery.trim() && (
+            <div className="mt-4 pt-3.5 border-t border-[#e5e7eb]">
+              <div className="text-[13px] font-bold text-[#2f6861] mb-2">
+                검색 결과 ({searchResults.length}건)
+              </div>
+              {searchResults.length === 0 ? (
+                <div className="text-[13px] text-[#6b7280]">
+                  해당 날짜·시간에 일치하는 탐활 내역이 없습니다.
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {searchResults.map(({ rec, meta, roomLabel }) => (
+                    <button
+                      key={rec.id}
+                      type="button"
+                      onClick={() => {
+                        if (meta && meta.buildingId !== 'external') {
+                          openBuildingView(meta.buildingId, meta.floor, meta.id);
+                        } else {
+                          setIsExternalModalOpen(true);
+                        }
+                      }}
+                      className="text-left px-3 py-1.5 rounded-[4px] border border-[#8bc7c0] bg-[#eef8f7] hover:bg-[#dff1ef] text-[13px]"
+                    >
+                      <span className="font-bold text-[#183d39]">{roomLabel}</span>
+                      <span className="mx-1.5 text-[#8bc7c0]">|</span>
+                      <span className="font-medium text-[#111111]">{rec.leader}</span>
+                      <span className="text-[#4b5563] ml-1">({rec.topic})</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
-          </div>
-        </section>
+          )}
+        </div>
 
-        {/* 5. 과구리 표준 카드 2: 전남과학고 캠퍼스 지도 또는 건물별 층별 평면도 */}
-        <section className="bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-6">
-          {viewMode === 'campus' ? (
-            <div className="relative w-full overflow-hidden rounded-[4px] border border-[#cbd5e1] bg-[#eef8f7]">
+        {/* ==================================================================
+            4. 지도 화면: [전체 캠퍼스 전경 SVG] 또는 [건물 내부 2단 평면도 + 상세 표]
+           ================================================================== */}
+        {viewMode === 'overview' ? (
+          <div className="mt-[20px] bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-5 sm:p-6">
+            <div className="w-full overflow-hidden rounded-[4px] border border-[#cccccc] bg-[#e9f4f2]">
               <svg
-                viewBox="0 0 1120 420"
+                viewBox="0 0 1120 390"
                 className="w-full h-auto block select-none"
                 role="img"
-                aria-label="전남과학고등학교 성실관, 창의관, 성취관 및 잔디 운동장 전경 지도"
+                aria-label="전남과학고등학교 전경 지도"
               >
                 <defs>
                   <linearGradient id="jshsSky" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#e5f4f2" />
-                    <stop offset="100%" stopColor="#f5fbfa" />
+                    <stop offset="0%" stopColor="#e3f1ef" />
+                    <stop offset="68%" stopColor="#f3f9f8" />
+                    <stop offset="100%" stopColor="#e8f3ea" />
                   </linearGradient>
+                  <pattern
+                    id="dotGrid"
+                    width="22"
+                    height="22"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <circle cx="2" cy="2" r="1.1" fill="#b9d8d3" />
+                  </pattern>
                 </defs>
 
-                {/* 배경 하늘 및 부드러운 구름 */}
-                <rect x="0" y="0" width="1120" height="275" fill="url(#jshsSky)" />
-                <g fill="#ffffff" opacity="0.75">
-                  <ellipse cx="170" cy="48" rx="48" ry="14" />
-                  <ellipse cx="205" cy="44" rx="34" ry="12" />
-                  <ellipse cx="760" cy="42" rx="54" ry="15" />
-                  <ellipse cx="805" cy="46" rx="36" ry="11" />
+                <rect x="0" y="0" width="1120" height="390" fill="url(#jshsSky)" />
+                <rect x="0" y="0" width="1120" height="320" fill="url(#dotGrid)" />
+
+                <g fill="#ffffff" opacity="0.9">
+                  <circle cx="155" cy="52" r="16" />
+                  <circle cx="176" cy="48" r="20" />
+                  <circle cx="198" cy="53" r="15" />
+                  <circle cx="950" cy="46" r="15" />
+                  <circle cx="972" cy="42" r="21" />
+                  <circle cx="994" cy="48" r="16" />
                 </g>
 
-                {/* 원경 녹지 */}
-                <path
-                  d="M0,248 Q260,218 540,238 T1120,230 L1120,275 L0,275 Z"
-                  fill="#cde2d1"
+                <rect x="0" y="314" width="1120" height="76" fill="#dfece0" />
+                <polygon points="75,326 1055,326 1085,376 45,376" fill="#5ea343" />
+                <polygon
+                  points="75,326 1055,326 1085,376 45,376"
+                  fill="none"
+                  stroke="#498732"
+                  strokeWidth="2"
                 />
+                <line
+                  x1="565"
+                  y1="326"
+                  x2="565"
+                  y2="376"
+                  stroke="#ffffff"
+                  strokeWidth="1.8"
+                  opacity="0.7"
+                />
+                <ellipse
+                  cx="565"
+                  cy="351"
+                  rx="42"
+                  ry="12"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="1.8"
+                  opacity="0.7"
+                />
+                <g stroke="#ffffff" strokeWidth="2.5" fill="none">
+                  <polyline points="118,358 118,334 146,334 146,358" />
+                  <polyline points="984,358 984,334 1012,334 1012,358" />
+                </g>
 
-                {/* 건물 앞 붉은 벽돌 계단식 화단/단차 & 조경수 */}
-                <rect x="0" y="264" width="1120" height="14" fill="#a85548" />
-                <rect x="0" y="278" width="1120" height="12" fill="#d6d3d1" />
-                {[42, 472, 838, 1082].map((tx, i) => (
+                {[54, 466, 804, 1076].map((tx, i) => (
                   <g key={`tree-${i}`}>
-                    <circle cx={tx} cy="254" r="18" fill="#4f9446" />
-                    <circle cx={tx + 14} cy="258" r="14" fill="#63a858" />
+                    <rect x={tx - 3} y="302" width="6" height="18" fill="#6b4423" />
+                    <circle cx={tx} cy="292" r="16" fill="#3d8b37" />
+                    <circle cx={tx - 8} cy="297" r="11" fill="#4da346" />
+                    <circle cx={tx + 8} cy="297" r="11" fill="#2f752a" />
                   </g>
                 ))}
 
-                {/* 전경 푸른 잔디 운동장 (교차 줄무늬 + 트랙 라인 + 양측 하얀 골대) */}
-                <rect x="0" y="290" width="1120" height="130" fill="#5ba83a" />
-                {[0, 160, 320, 480, 640, 800, 960].map((gx, idx) => (
-                  <rect
-                    key={`stripe-${idx}`}
-                    x={gx}
-                    y="290"
-                    width="80"
-                    height="130"
-                    fill="#4c962e"
-                    opacity="0.55"
-                  />
-                ))}
-                {/* 운동장 외곽 라인 및 하프라인 */}
-                <polygon
-                  points="85,305 1035,305 1085,405 35,405"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2.5"
-                  opacity="0.9"
-                />
-                <line
-                  x1="560"
-                  y1="305"
-                  x2="560"
-                  y2="405"
-                  stroke="#ffffff"
-                  strokeWidth="2.5"
-                  opacity="0.9"
-                />
-                <ellipse
-                  cx="560"
-                  cy="355"
-                  rx="42"
-                  ry="20"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2.5"
-                  opacity="0.9"
-                />
-                {/* 좌측 전경 하얀 축구 골대 */}
-                <g stroke="#ffffff" strokeWidth="3" fill="none">
-                  <polygon points="75,332 96,332 96,374 75,374" />
-                  <polyline points="75,332 58,340 58,380 75,374" />
-                </g>
-                {/* 우측 원경 하얀 축구 골대 */}
-                <g stroke="#ffffff" strokeWidth="3" fill="none">
-                  <polygon points="1024,332 1045,332 1045,374 1024,374" />
-                  <polyline points="1045,332 1062,340 1062,380 1045,374" />
-                </g>
-
-                {/* ================= 1. 성실관 (본관 · 1~4F) ================= */}
-                <g
-                  onClick={() => openBuildingView('seongsil')}
-                  className="cursor-pointer group"
-                >
-                  {/* 본관 붉은 벽돌 파사드 */}
-                  <rect
-                    x="84"
-                    y="92"
-                    width="374"
-                    height="172"
-                    fill="#9c3d32"
-                    stroke="#6e261e"
-                    strokeWidth="1.5"
-                  />
-                  {/* 좌측 끝 둥근 붉은 벽돌 계단탑 & 세로 아치형 창 */}
-                  <rect
-                    x="56"
-                    y="88"
-                    width="38"
-                    height="176"
-                    rx="17"
-                    fill="#8b3228"
-                    stroke="#6e261e"
-                    strokeWidth="1.5"
-                  />
-                  <rect
-                    x="67"
-                    y="102"
-                    width="16"
-                    height="146"
-                    rx="8"
-                    fill="#334155"
-                    stroke="#e8e2d5"
-                    strokeWidth="2"
-                  />
-
-                  {/* 4개 층 수평 아이보리 콘크리트 띠 */}
-                  <rect x="84" y="88" width="374" height="8" fill="#e8e2d5" />
-                  <rect x="84" y="130" width="374" height="7" fill="#e8e2d5" />
-                  <rect x="84" y="172" width="374" height="7" fill="#e8e2d5" />
-                  <rect x="84" y="214" width="374" height="7" fill="#e8e2d5" />
-
-                  {/* 창문 베이 */}
-                  {[101, 143, 185].map((wy, rIdx) =>
-                    [106, 144, 182, 220, 310, 348, 386, 424].map((wx, cIdx) => (
-                      <rect
-                        key={`ss-win-${rIdx}-${cIdx}`}
-                        x={wx}
-                        y={wy}
-                        width="26"
-                        height="22"
-                        rx="1.5"
-                        fill="#2d3b45"
-                        stroke="#e8e2d5"
-                        strokeWidth="1.2"
-                      />
-                    ))
-                  )}
-
-                  {/* 중앙현관 돌출 포치 & 하얀 수직 열주 기둥 */}
-                  <rect
-                    x="252"
-                    y="175"
-                    width="52"
-                    height="89"
-                    fill="#e8e2d5"
-                    stroke="#b8b0a2"
-                    strokeWidth="1.2"
-                  />
-                  {[258, 270, 282, 294].map((px) => (
-                    <rect
-                      key={`pillar-${px}`}
-                      x={px}
-                      y="183"
-                      width="5"
-                      height="81"
-                      fill="#ffffff"
-                    />
-                  ))}
-                  <rect x="265" y="226" width="26" height="38" fill="#1e293b" />
-
-                  {/* 성실관 상단 상태 배지 & 하단 이름 라벨 */}
-                  {(() => {
-                    const st = buildingSummaries.seongsil;
-                    const isConflict = st.conflictRooms > 0;
-                    const isUsed = st.teams > 0;
-                    const pillColor = isConflict
-                      ? '#d9823b'
-                      : isUsed
-                      ? '#5ea69e'
-                      : '#6b7280';
-                    const statusText = isConflict
-                      ? `중복 사용실 ${st.conflictRooms}곳 · ${st.teams}팀`
-                      : isUsed
-                      ? `${st.teams}팀 사용 중`
-                      : '현재 비어 있음';
-                    return (
-                      <g>
-                        <rect
-                          x="178"
-                          y="46"
-                          width="176"
-                          height="28"
-                          rx="14"
-                          fill={pillColor}
-                        />
-                        <text
-                          x="266"
-                          y="64"
-                          textAnchor="middle"
-                          fontSize="12.5"
-                          fontWeight="700"
-                          fill="#ffffff"
-                        >
-                          {statusText}
-                        </text>
-
-                        <rect
-                          x="184"
-                          y="246"
-                          width="164"
-                          height="26"
-                          rx="13"
-                          fill="#1f2937"
-                        />
-                        <text
-                          x="266"
-                          y="263"
-                          textAnchor="middle"
-                          fontSize="12"
-                          fontWeight="700"
-                          fill="#ffffff"
-                        >
-                          {BUILDINGS.seongsil.mapLabel}
-                        </text>
-                      </g>
-                    );
-                  })()}
-                </g>
-
-                {/* ================= 2층 연결통로 ================= */}
+                {/* 2층 연결통로 */}
                 <g>
-                  <rect
-                    x="458"
-                    y="174"
-                    width="44"
-                    height="32"
-                    fill="#9c3d32"
-                    stroke="#6e261e"
-                    strokeWidth="1.2"
-                  />
-                  <rect
-                    x="462"
-                    y="180"
-                    width="36"
-                    height="18"
-                    fill="#bae6fd"
-                    stroke="#e8e2d5"
-                    strokeWidth="1.5"
-                  />
                   <text
-                    x="480"
-                    y="167"
+                    x="466"
+                    y="233"
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize="12"
                     fontWeight="700"
                     fill="#374151"
                   >
                     2층 연결통로
                   </text>
+                  <rect
+                    x="442"
+                    y="240"
+                    width="48"
+                    height="24"
+                    fill="#dbeafe"
+                    stroke="#8f3b32"
+                    strokeWidth="2"
+                  />
+                  <line
+                    x1="442"
+                    y1="252"
+                    x2="490"
+                    y2="252"
+                    stroke="#64748b"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 3"
+                  />
                 </g>
 
-                {/* ================= 2. 창의관 (실험동 · 1~4F+옥상) ================= */}
+                {/* ==========================================================
+                    [좌측 건물] 성실관 (본관 · 1~4F)
+                   ========================================================== */}
+                <g
+                  onClick={() => openBuildingView('seongsil')}
+                  className="cursor-pointer group"
+                >
+                  <rect
+                    x="228"
+                    y="124"
+                    width="74"
+                    height="16"
+                    rx="2"
+                    fill="#8f3b32"
+                    stroke="#6d2922"
+                    strokeWidth="1.5"
+                  />
+
+                  <rect
+                    x="74"
+                    y="130"
+                    width="24"
+                    height="186"
+                    rx="10"
+                    fill="#7c3028"
+                    stroke="#5e211b"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x="81"
+                    y="146"
+                    width="10"
+                    height="152"
+                    rx="4"
+                    fill="#334155"
+                  />
+
+                  <rect
+                    x="94"
+                    y="138"
+                    width="348"
+                    height="178"
+                    fill="#8f3b32"
+                    stroke="#5e211b"
+                    strokeWidth="2"
+                  />
+
+                  {[146, 184, 222, 260].map((bandY, rIdx) => (
+                    <g key={`ss-band-${rIdx}`}>
+                      <rect x="94" y={bandY} width="348" height="8" fill="#e8e2d5" />
+                      {[112, 146, 180, 214, 304, 338, 372, 406].map((winX, wIdx) => (
+                        <rect
+                          key={`ss-win-${rIdx}-${wIdx}`}
+                          x={winX}
+                          y={bandY + 11}
+                          width="24"
+                          height="20"
+                          rx="1"
+                          fill="#334155"
+                          stroke="#d6cfc2"
+                          strokeWidth="1"
+                        />
+                      ))}
+                    </g>
+                  ))}
+
+                  <rect
+                    x="244"
+                    y="232"
+                    width="48"
+                    height="84"
+                    fill="#f3efe6"
+                    stroke="#8f3b32"
+                    strokeWidth="1.5"
+                  />
+                  {[249, 258, 268, 278, 287].map((px, pi) => (
+                    <line
+                      key={`col-${pi}`}
+                      x1={px}
+                      y1="234"
+                      x2={px}
+                      y2="314"
+                      stroke="#9ca3af"
+                      strokeWidth="2"
+                    />
+                  ))}
+                  <rect x="256" y="290" width="24" height="26" fill="#1e293b" />
+
+                  <rect
+                    x="156"
+                    y="80"
+                    width="224"
+                    height="32"
+                    rx="16"
+                    fill={buildingBadges.seongsil.pillColor}
+                  />
+                  <text
+                    x="268"
+                    y="101"
+                    textAnchor="middle"
+                    fontSize="14"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {buildingBadges.seongsil.statusText}
+                  </text>
+
+                  <rect x="160" y="330" width="216" height="32" rx="16" fill="#1f2937" />
+                  <text
+                    x="268"
+                    y="351"
+                    textAnchor="middle"
+                    fontSize="14.5"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {BUILDINGS.seongsil.mapLabel}
+                  </text>
+                </g>
+
+                {/* ==========================================================
+                    [중앙 건물] 창의관 (실험동 · 1~4F+옥상)
+                   ========================================================== */}
                 <g
                   onClick={() => openBuildingView('changui')}
                   className="cursor-pointer group"
                 >
-                  {/* 옥상 천문대 돔 (반원형 중앙 타워 상부) */}
                   <path
-                    d="M645,92 A28,26 0 0,1 701,92 Z"
-                    fill="#f8fafc"
-                    stroke="#64748b"
-                    strokeWidth="1.5"
+                    d="M 622 126 A 36 32 0 0 1 694 126 Z"
+                    fill="#e5e7eb"
+                    stroke="#374151"
+                    strokeWidth="2"
                   />
                   <line
-                    x1="673"
-                    y1="66"
-                    x2="673"
-                    y2="92"
-                    stroke="#64748b"
-                    strokeWidth="1.5"
+                    x1="658"
+                    y1="94"
+                    x2="658"
+                    y2="126"
+                    stroke="#4b5563"
+                    strokeWidth="2"
                   />
                   <text
-                    x="673"
-                    y="58"
+                    x="658"
+                    y="86"
                     textAnchor="middle"
-                    fontSize="10.5"
+                    fontSize="12.5"
                     fontWeight="700"
-                    fill="#334155"
+                    fill="#1f2937"
                   >
                     옥상 천문대
                   </text>
 
-                  {/* 창의관 붉은 벽돌 파사드 */}
                   <rect
-                    x="502"
-                    y="92"
-                    width="342"
-                    height="172"
-                    fill="#9c3d32"
-                    stroke="#6e261e"
-                    strokeWidth="1.5"
-                  />
-                  {/* 수평 아이보리 콘크리트 띠 */}
-                  <rect x="502" y="88" width="342" height="8" fill="#e8e2d5" />
-                  <rect x="502" y="130" width="342" height="7" fill="#e8e2d5" />
-                  <rect x="502" y="172" width="342" height="7" fill="#e8e2d5" />
-                  <rect x="502" y="214" width="342" height="7" fill="#e8e2d5" />
-
-                  {/* 좌·우 실험실 창문 베이 */}
-                  {[101, 143, 185, 227].map((wy, rIdx) =>
-                    [518, 558, 598, 722, 762, 802].map((wx, cIdx) => (
-                      <rect
-                        key={`cg-win-${rIdx}-${cIdx}`}
-                        x={wx}
-                        y={wy}
-                        width="28"
-                        height="22"
-                        rx="1.5"
-                        fill="#2d3b45"
-                        stroke="#e8e2d5"
-                        strokeWidth="1.2"
-                      />
-                    ))
-                  )}
-
-                  {/* 중앙 반원형 통유리 커튼월 타워 */}
-                  <rect
-                    x="638"
-                    y="92"
-                    width="70"
-                    height="172"
-                    rx="6"
-                    fill="#7dd3fc"
-                    fillOpacity="0.78"
-                    stroke="#e8e2d5"
+                    x="490"
+                    y="126"
+                    width="304"
+                    height="190"
+                    fill="#8f3b32"
+                    stroke="#5e211b"
                     strokeWidth="2"
                   />
-                  {[130, 172, 214].map((ly) => (
+
+                  {[134, 174, 214, 254].map((bandY, rIdx) => (
+                    <g key={`cu-band-${rIdx}`}>
+                      <rect x="490" y={bandY} width="304" height="7" fill="#e8e2d5" />
+                      {[506, 544, 582, 698, 736, 766].map((winX, wIdx) => (
+                        <rect
+                          key={`cu-win-${rIdx}-${wIdx}`}
+                          x={winX}
+                          y={bandY + 11}
+                          width={wIdx === 5 ? 18 : 26}
+                          height="21"
+                          rx="1"
+                          fill="#334155"
+                          stroke="#d6cfc2"
+                          strokeWidth="1"
+                        />
+                      ))}
+                    </g>
+                  ))}
+
+                  <rect
+                    x="624"
+                    y="126"
+                    width="68"
+                    height="190"
+                    fill="#93b8d8"
+                    stroke="#475569"
+                    strokeWidth="1.5"
+                  />
+                  {[156, 196, 236, 276].map((gy, gi) => (
                     <line
-                      key={`curtain-h-${ly}`}
-                      x1="638"
-                      y1={ly}
-                      x2="708"
-                      y2={ly}
-                      stroke="#e8e2d5"
+                      key={`glass-h-${gi}`}
+                      x1="624"
+                      y1={gy}
+                      x2="692"
+                      y2={gy}
+                      stroke="#e2e8f0"
                       strokeWidth="2"
                     />
                   ))}
                   <line
-                    x1="661"
-                    y1="92"
-                    x2="661"
-                    y2="264"
-                    stroke="#e8e2d5"
+                    x1="647"
+                    y1="126"
+                    x2="647"
+                    y2="316"
+                    stroke="#e2e8f0"
                     strokeWidth="1.5"
                   />
                   <line
-                    x1="685"
-                    y1="92"
-                    x2="685"
-                    y2="264"
-                    stroke="#e8e2d5"
+                    x1="669"
+                    y1="126"
+                    x2="669"
+                    y2="316"
+                    stroke="#e2e8f0"
                     strokeWidth="1.5"
                   />
+                  <rect x="646" y="292" width="24" height="24" fill="#1e293b" />
 
-                  {/* 창의관 상단 상태 배지 & 하단 이름 라벨 */}
-                  {(() => {
-                    const st = buildingSummaries.changui;
-                    const isConflict = st.conflictRooms > 0;
-                    const isUsed = st.teams > 0;
-                    const pillColor = isConflict
-                      ? '#d9823b'
-                      : isUsed
-                      ? '#5ea69e'
-                      : '#6b7280';
-                    const statusText = isConflict
-                      ? `중복 사용실 ${st.conflictRooms}곳 · ${st.teams}팀`
-                      : isUsed
-                      ? `${st.teams}팀 사용 중`
-                      : '현재 비어 있음';
-                    return (
-                      <g>
-                        <rect
-                          x="581"
-                          y="18"
-                          width="184"
-                          height="28"
-                          rx="14"
-                          fill={pillColor}
-                        />
-                        <text
-                          x="673"
-                          y="36"
-                          textAnchor="middle"
-                          fontSize="12.5"
-                          fontWeight="700"
-                          fill="#ffffff"
-                        >
-                          {statusText}
-                        </text>
+                  <rect
+                    x="530"
+                    y="38"
+                    width="224"
+                    height="32"
+                    rx="16"
+                    fill={buildingBadges.changui.pillColor}
+                  />
+                  <text
+                    x="642"
+                    y="59"
+                    textAnchor="middle"
+                    fontSize="14"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {buildingBadges.changui.statusText}
+                  </text>
 
-                        <rect
-                          x="578"
-                          y="246"
-                          width="190"
-                          height="26"
-                          rx="13"
-                          fill="#1f2937"
-                        />
-                        <text
-                          x="673"
-                          y="263"
-                          textAnchor="middle"
-                          fontSize="12"
-                          fontWeight="700"
-                          fill="#ffffff"
-                        >
-                          {BUILDINGS.changui.mapLabel}
-                        </text>
-                      </g>
-                    );
-                  })()}
+                  <rect x="524" y="330" width="236" height="32" rx="16" fill="#1f2937" />
+                  <text
+                    x="642"
+                    y="351"
+                    textAnchor="middle"
+                    fontSize="14.5"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {BUILDINGS.changui.mapLabel}
+                  </text>
                 </g>
 
-                {/* ================= 3. 성취관 (강당 · 1~2F) ================= */}
+                {/* ==========================================================
+                    [우측 건물] 성취관 (강당 · 1~2F)
+                   ========================================================== */}
                 <g
                   onClick={() => openBuildingView('seongchui')}
                   className="cursor-pointer group"
                 >
-                  {/* 성취관 붉은 벽돌 & 아이보리 수평띠 */}
                   <rect
-                    x="868"
-                    y="138"
-                    width="196"
-                    height="126"
-                    fill="#9c3d32"
-                    stroke="#6e261e"
-                    strokeWidth="1.5"
+                    x="832"
+                    y="180"
+                    width="224"
+                    height="136"
+                    fill="#8f3b32"
+                    stroke="#5e211b"
+                    strokeWidth="2"
                   />
-                  <rect x="864" y="132" width="204" height="8" fill="#e8e2d5" />
-                  <rect x="868" y="198" width="196" height="7" fill="#e8e2d5" />
+                  <rect x="832" y="188" width="224" height="8" fill="#e8e2d5" />
+                  <rect x="832" y="246" width="224" height="7" fill="#e8e2d5" />
 
-                  {/* 강당 대형 창문 베이 */}
-                  {[888, 924, 960, 996, 1032].map((wx, idx) => (
-                    <g key={`sc-win-${idx}`}>
+                  {[852, 892, 932, 972, 1012].map((wx, wi) => (
+                    <g key={`sc-win-${wi}`}>
                       <rect
                         x={wx}
-                        y="150"
-                        width="20"
-                        height="36"
-                        rx="1.5"
-                        fill="#2d3b45"
-                        stroke="#e8e2d5"
-                        strokeWidth="1.2"
+                        y="204"
+                        width="22"
+                        height="32"
+                        rx="1"
+                        fill="#334155"
+                        stroke="#d6cfc2"
+                        strokeWidth="1"
                       />
                       <rect
                         x={wx}
-                        y="214"
-                        width="20"
-                        height="34"
-                        rx="1.5"
-                        fill="#2d3b45"
-                        stroke="#e8e2d5"
-                        strokeWidth="1.2"
+                        y="262"
+                        width="22"
+                        height="26"
+                        rx="1"
+                        fill="#334155"
+                        stroke="#d6cfc2"
+                        strokeWidth="1"
                       />
                     </g>
                   ))}
 
-                  {/* 성취관 상단 상태 배지 & 하단 이름 라벨 */}
-                  {(() => {
-                    const st = buildingSummaries.seongchui;
-                    const isConflict = st.conflictRooms > 0;
-                    const isUsed = st.teams > 0;
-                    const pillColor = isConflict
-                      ? '#d9823b'
-                      : isUsed
-                      ? '#5ea69e'
-                      : '#6b7280';
-                    const statusText = isConflict
-                      ? `중복 사용실 ${st.conflictRooms}곳 · ${st.teams}팀`
-                      : isUsed
-                      ? `${st.teams}팀 사용 중`
-                      : '현재 비어 있음';
-                    return (
-                      <g>
-                        <rect
-                          x="886"
-                          y="92"
-                          width="160"
-                          height="28"
-                          rx="14"
-                          fill={pillColor}
-                        />
-                        <text
-                          x="966"
-                          y="110"
-                          textAnchor="middle"
-                          fontSize="12.5"
-                          fontWeight="700"
-                          fill="#ffffff"
-                        >
-                          {statusText}
-                        </text>
+                  <rect
+                    x="844"
+                    y="134"
+                    width="200"
+                    height="32"
+                    rx="16"
+                    fill={buildingBadges.seongchui.pillColor}
+                  />
+                  <text
+                    x="944"
+                    y="155"
+                    textAnchor="middle"
+                    fontSize="14"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {buildingBadges.seongchui.statusText}
+                  </text>
 
-                        <rect
-                          x="888"
-                          y="246"
-                          width="156"
-                          height="26"
-                          rx="13"
-                          fill="#1f2937"
-                        />
-                        <text
-                          x="966"
-                          y="263"
-                          textAnchor="middle"
-                          fontSize="12"
-                          fontWeight="700"
-                          fill="#ffffff"
-                        >
-                          {BUILDINGS.seongchui.mapLabel}
-                        </text>
-                      </g>
-                    );
-                  })()}
+                  <rect x="844" y="330" width="200" height="32" rx="16" fill="#1f2937" />
+                  <text
+                    x="944"
+                    y="351"
+                    textAnchor="middle"
+                    fontSize="14.5"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {BUILDINGS.seongchui.mapLabel}
+                  </text>
                 </g>
               </svg>
-
-              {/* 교외 활동 배정 팀이 있는 경우 지도 우측 하단 작은 배지 표시 */}
-              {externalRecords.length > 0 && (
+            </div>
+          </div>
+        ) : (
+          /* ==================================================================
+             [건물 내부 평면도 뷰] 좌측 2단 블록 그리드 평면도 + 우측 과구리 2열 표 상세 패널
+             ================================================================== */
+          <div className="mt-[20px] space-y-4">
+            <div className="bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowExternalModal(true)}
-                  className="absolute right-4 bottom-4 bg-[#1f2937]/90 hover:bg-[#111827] text-white text-[13px] font-bold px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 transition-colors"
+                  onClick={() => setViewMode('overview')}
+                  className="px-3.5 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-white hover:bg-[#f3f4f6] text-[14px] font-bold text-[#111111]"
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#8bc7c0]" />
-                  <span>교외 활동 {externalRecords.length}건</span>
+                  ← 전체 학교 지도로 돌아가기
                 </button>
-              )}
-            </div>
-          ) : (
-            /* 7. 화면 모드 B: 건물 내부 층별 2단 블록 그리드 평면도 + 우측 과구리 2열 표 상세 패널 */
-            <div>
-              {/* 상단 내비게이션: 전체 학교 지도로 돌아가기 + 건물 탭 + 층 탭 */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-[#e5e7eb]">
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('campus')}
-                    className="px-3.5 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-[#f9fafb] hover:bg-[#f3f4f6] text-[14px] font-bold text-[#111111] transition-colors"
-                  >
-                    ← 전체 학교 지도로 돌아가기
-                  </button>
 
-                  <div className="h-5 w-[1px] bg-[#d1d5db] mx-1 hidden sm:block" />
+                <span className="text-[#d1d5db] mx-1">|</span>
 
-                  {Object.values(BUILDINGS).map((b) => {
-                    const st = buildingSummaries[b.id];
-                    return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={() => openBuildingView(b.id)}
-                        className={`px-3.5 py-1.5 rounded-[4px] text-[14px] font-bold border transition-colors flex items-center gap-1.5 ${
-                          selectedBuildingId === b.id
-                            ? 'bg-[#eef8f7] border-[#8bc7c0] text-[#111111]'
-                            : 'bg-[#f3f4f6] border-transparent text-[#374151] hover:bg-[#e5e7eb]'
-                        }`}
-                      >
-                        <span>{b.fullName}</span>
-                        {st.teams > 0 && (
-                          <span
-                            className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                              selectedBuildingId === b.id
-                                ? 'bg-[#5ea69e] text-white'
-                                : st.conflictRooms > 0
-                                ? 'bg-[#d9823b] text-white'
-                                : 'bg-[#8bc7c0] text-white'
-                            }`}
-                          >
-                            {st.teams}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* 층 선택 탭 */}
-                <div className="flex items-center gap-1.5">
-                  {Object.keys(currentBuilding.floors).map((floorKey) => {
-                    const floorObj = currentBuilding.floors[floorKey];
-                    const floorRooms = [...floorObj.topRooms, ...floorObj.bottomRooms];
-                    const hasTeams = floorRooms.some(
-                      (r) => (recordsByRoom[r.id]?.length || 0) > 0
-                    );
-                    const hasConflict = floorRooms.some(
-                      (r) => (recordsByRoom[r.id]?.length || 0) >= 2
-                    );
-
-                    return (
-                      <button
-                        key={floorKey}
-                        type="button"
-                        onClick={() => handleSelectFloor(floorKey)}
-                        className={`px-3 py-1.5 rounded-[4px] text-[13px] font-bold border transition-colors flex items-center gap-1.5 ${
-                          selectedFloor === floorKey
-                            ? 'bg-[#111111] text-white border-[#111111]'
-                            : 'bg-white text-[#374151] border-[#bdbdbd] hover:bg-[#f3f4f6]'
-                        }`}
-                      >
-                        <span>{floorKey}</span>
-                        {hasTeams && (
-                          <span
-                            className={`w-2 h-2 rounded-full ${
-                              hasConflict ? 'bg-[#d9823b]' : 'bg-[#8bc7c0]'
-                            }`}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                {Object.values(BUILDINGS).map((b) => {
+                  const st = buildingStats[b.id];
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => openBuildingView(b.id)}
+                      className={`px-3.5 py-1.5 rounded-[4px] text-[14px] font-bold border transition-colors flex items-center gap-1.5 ${
+                        selectedBuildingId === b.id
+                          ? 'bg-[#eef8f7] border-[#8bc7c0] text-[#111111]'
+                          : 'bg-[#f3f4f6] border-transparent text-[#374151] hover:bg-[#e5e7eb]'
+                      }`}
+                    >
+                      <span>{b.fullName}</span>
+                      {st.teams > 0 && (
+                        <span
+                          className={`text-[11px] px-1.5 py-0.2 rounded-full ${
+                            selectedBuildingId === b.id
+                              ? 'bg-[#5ea69e] text-white'
+                              : st.conflictRooms > 0
+                              ? 'bg-[#d9823b] text-white'
+                              : 'bg-[#8bc7c0] text-white'
+                          }`}
+                        >
+                          {st.teams}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* 좌측 8컬럼(2단 블록 평면도) + 우측 4컬럼(과구리 2열 표 상세 패널) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* 좌측: 2단 블록 그리드 평면도 */}
-                <div className="lg:col-span-8 bg-[#f9fafb] border border-[#bdbdbd] rounded-[4px] p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-[17px] font-bold text-[#111111]">
-                      {currentBuilding.fullName} · {selectedFloor} 평면도
-                    </h2>
-                    <span className="text-[12px] text-[#6b7280]">
-                      실 카드를 클릭하면 우측에서 신청 상세 표를 볼 수 있습니다.
-                    </span>
-                  </div>
+              <div className="flex items-center gap-1.5">
+                {Object.keys(currentBuilding.floors).map((floorKey) => {
+                  const fStat = floorStats[selectedBuildingId]?.[floorKey] || {
+                    hasTeams: false,
+                    hasConflict: false,
+                  };
 
-                  {/* 상단 구역 */}
+                  return (
+                    <button
+                      key={floorKey}
+                      type="button"
+                      onClick={() => handleSelectFloor(floorKey)}
+                      className={`px-3 py-1.5 rounded-[4px] text-[13px] font-bold border transition-colors flex items-center gap-1.5 ${
+                        selectedFloor === floorKey
+                          ? 'bg-[#111111] text-white border-[#111111]'
+                          : 'bg-white text-[#374151] border-[#bdbdbd] hover:bg-[#f3f4f6]'
+                      }`}
+                    >
+                      <span>{floorKey}</span>
+                      {fStat.hasTeams && (
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            fStat.hasConflict ? 'bg-[#d9823b]' : 'bg-[#8bc7c0]'
+                          }`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              {/* 좌측: 2단 블록 그리드 평면도 */}
+              <div className="lg:col-span-8 bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-5">
+                <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#e5e7eb]">
+                  <h2 className="text-[18px] font-bold text-[#111111]">
+                    {currentBuilding.fullName} · {currentFloorObj.label} 평면도
+                  </h2>
+                  <span className="text-[12.5px] text-[#6b7280]">
+                    실 카드를 클릭하면 우측에서 신청 상세 표를 볼 수 있습니다.
+                  </span>
+                </div>
+
+                <div className="border border-[#d1d5db] rounded-[5px] bg-[#fafafa] p-4 space-y-3.5">
                   <div
                     className={`grid gap-3 ${
                       currentFloorObj.topRooms.length === 1
                         ? 'grid-cols-1'
                         : currentFloorObj.topRooms.length === 2
                         ? 'grid-cols-1 sm:grid-cols-2'
+                        : currentFloorObj.topRooms.length === 3
+                        ? 'grid-cols-1 sm:grid-cols-3'
                         : 'grid-cols-2 sm:grid-cols-4'
                     }`}
                   >
                     {currentFloorObj.topRooms.map(renderRoomCard)}
                   </div>
 
-                  {/* 중앙 복도 바 */}
-                  <div className="my-3.5 py-2 px-3 rounded-[4px] bg-[#e5e7eb] border border-[#cbd5e1] text-center text-[12px] font-bold text-[#475569]">
+                  <div className="py-2.5 px-4 rounded-[4px] bg-[#e5e7eb] text-center text-[13px] font-bold text-[#374151] tracking-tight">
                     {currentFloorObj.corridor}
                   </div>
 
-                  {/* 하단 구역 */}
                   {currentFloorObj.bottomRooms.length > 0 && (
                     <div
                       className={`grid gap-3 ${
@@ -2273,8 +2165,6 @@ export default function App() {
                           ? 'grid-cols-1 sm:grid-cols-2'
                           : currentFloorObj.bottomRooms.length === 3
                           ? 'grid-cols-1 sm:grid-cols-3'
-                          : currentFloorObj.bottomRooms.length === 5
-                          ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
                           : 'grid-cols-2 sm:grid-cols-4'
                       }`}
                     >
@@ -2282,325 +2172,336 @@ export default function App() {
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* 우측: 과구리 표준 2열 표 상세 패널 */}
-                <div className="lg:col-span-4 bg-white border border-[#bdbdbd] rounded-[4px] p-4">
-                  <div className="pb-3 mb-3 border-b border-[#e5e7eb] flex items-start justify-between gap-2">
-                    <div>
-                      <div className="text-[12px] text-[#6b7280]">
-                        {selectedRoomMeta.buildingName} · {selectedRoomMeta.floor}
-                      </div>
-                      <h3 className="text-[18px] font-bold text-[#111111] mt-0.5">
-                        {selectedRoomMeta.name}
-                        {selectedRoomMeta.sub && (
-                          <span className="ml-1.5 text-[13px] font-normal text-[#6b7280]">
-                            ({selectedRoomMeta.sub})
-                          </span>
-                        )}
-                      </h3>
+              {/* 우측: 선택한 실 상세 정보 (실제 과구리 2열 표 스타일) */}
+              <div className="lg:col-span-4 bg-white border border-[#bdbdbd] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] p-5">
+                <div className="flex items-start justify-between gap-2 pb-3 mb-4 border-b border-[#e5e7eb]">
+                  <div>
+                    <div className="text-[12.5px] font-medium text-[#6b7280]">
+                      {selectedRoomMeta.buildingName} · {selectedRoomMeta.floor}
                     </div>
-
-                    {selectedRoomRecords.length === 0 ? (
-                      <span className="text-[12px] font-semibold px-2.5 py-1 rounded-[3px] bg-[#f3f4f6] text-[#6b7280]">
-                        비어 있음
-                      </span>
-                    ) : selectedRoomRecords.length === 1 ? (
-                      <span className="text-[12px] font-bold px-2.5 py-1 rounded-[3px] bg-[#d6efec] text-[#245e58]">
-                        1팀 사용 중
-                      </span>
-                    ) : (
-                      <span className="text-[12px] font-bold px-2.5 py-1 rounded-[3px] bg-[#d9823b] text-white">
-                        {selectedRoomRecords.length}팀 중복
-                      </span>
-                    )}
+                    <h3 className="text-[20px] font-bold text-[#111111] mt-0.5">
+                      {selectedRoomMeta.name}
+                      {selectedRoomMeta.sub && (
+                        <span className="ml-2 text-[13px] font-normal text-[#6b7280]">
+                          ({selectedRoomMeta.sub})
+                        </span>
+                      )}
+                    </h3>
                   </div>
 
-                  {selectedRoomRecords.length === 0 ? (
-                    <div className="py-12 px-4 text-center border border-dashed border-[#bdbdbd] rounded-[4px] bg-[#f9fafb]">
-                      <p className="text-[14px] font-bold text-[#374151]">
-                        신청된 탐활 내역이 없습니다.
-                      </p>
-                      <p className="text-[12px] text-[#6b7280] mt-1">
-                        {formatKoreanDate(selectedDate)} ({periodFilter === 'ALL' ? '전체 시간' : periodFilter}) 기준 비어 있는 실입니다.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 max-h-[580px] overflow-y-auto pr-0.5">
-                      {selectedRoomRecords.map((rec) => (
-                        <div
-                          key={rec.id}
-                          className="border border-[#cccccc] rounded-[2px] overflow-hidden"
-                        >
-                          <div className="bg-[#f8f9fa] px-3 py-1.5 text-[12px] text-[#666666] border-b border-[#cccccc] flex items-center justify-between">
-                            <span>{rec.submittedAt}</span>
-                            <span className="font-semibold text-[#374151]">
-                              총 {countUniqueStudents(rec)}명
-                            </span>
-                          </div>
-                          <table className="w-full border-collapse">
-                            <tbody>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                                  활동날짜
-                                </th>
-                                <td className="bg-white text-[#111111] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                                  {formatKoreanDate(rec.date)}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                                  활동시간
-                                </th>
-                                <td className="bg-white text-[#111111] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                                  {rec.timeText}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                                  활동장소
-                                </th>
-                                <td className="bg-white text-[#111111] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                                  {rec.rawLocation}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                                  활동내용
-                                </th>
-                                <td className="bg-white text-[#111111] text-[13px] px-3 py-2 border-b border-[#dddddd] leading-relaxed">
-                                  {rec.topic}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                                  대표학생
-                                </th>
-                                <td className="bg-white text-[#111111] font-bold text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                                  {rec.leader}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                                  참가학생
-                                </th>
-                                <td className="bg-white text-[#111111] text-[13px] px-3 py-2 border-b border-[#dddddd] leading-relaxed">
-                                  {rec.members}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-[#dddddd] text-center">
-                                  지도교사
-                                </th>
-                                <td className="bg-white text-[#111111] text-[13px] px-3 py-2">
-                                  {rec.teacher}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <span
+                    className={`px-2.5 py-1 rounded-[4px] text-[12px] font-bold shrink-0 ${
+                      selectedRoomRecords.length >= 2
+                        ? 'bg-[#fdebd8] text-[#b45309]'
+                        : selectedRoomRecords.length === 1
+                        ? 'bg-[#dff1ef] text-[#2f6861]'
+                        : 'bg-[#f3f4f6] text-[#6b7280]'
+                    }`}
+                  >
+                    {selectedRoomRecords.length >= 2
+                      ? `${selectedRoomRecords.length}팀 중복 사용`
+                      : selectedRoomRecords.length === 1
+                      ? '1팀 사용 중'
+                      : '비어 있음'}
+                  </span>
                 </div>
+
+                {selectedRoomRecords.length === 0 ? (
+                  <div className="py-12 text-center border border-dashed border-[#d1d5db] rounded-[4px] bg-[#fafafa]">
+                    <div className="text-[15px] font-bold text-[#4b5563]">
+                      신청된 탐활 내역이 없습니다.
+                    </div>
+                    <div className="text-[13px] text-[#6b7280] mt-1">
+                      {formatKoreanDate(selectedDate)} ({periodFilter === 'ALL' ? '전체 시간' : periodFilter}) 기준 비어 있는 실입니다.
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedRoomRecords.map((rec, idx) => (
+                      <div
+                        key={rec.id}
+                        className="border border-[#cccccc] rounded-[4px] overflow-hidden bg-white"
+                      >
+                        <div className="px-3 py-1.5 bg-[#fafafa] border-b border-[#e5e7eb] flex items-center justify-between text-[12px] text-[#6b7280]">
+                          <span className="font-bold text-[#374151]">
+                            #{idx + 1}팀 신청 내역
+                          </span>
+                          <span>{rec.submittedAt}</span>
+                        </div>
+
+                        <table className="w-full border-collapse text-[13.5px]">
+                          <tbody>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="w-[88px] py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                활동날짜
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111]">
+                                {rec.date}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                활동시간
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111]">
+                                {rec.timeText}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                활동장소
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111]">
+                                {rec.rawLocation}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                활동내용
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111] font-medium">
+                                {rec.topic}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                대표학생
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111] font-bold">
+                                {rec.leader}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                참가학생
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111] leading-relaxed">
+                                {rec.members}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="py-2 px-2.5 bg-[#f2f2f2] text-[#222222] font-bold text-center border-r border-[#e5e7eb]">
+                                지도교사
+                              </th>
+                              <td className="py-2 px-3 bg-white text-[#111111]">
+                                {rec.teacher}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          )}
-        </section>
+          </div>
+        )}
       </main>
 
-      {/* 8. 교외 활동 상세 조회 모달 */}
-      {showExternalModal && (
+      {/* ====================================================================
+          5. 탐활서 데이터 붙여넣기 모달
+         ==================================================================== */}
+      {isPasteModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#d1d5db] rounded-[4px] shadow-xl max-w-[540px] w-full overflow-hidden">
-            <div className="bg-[#8bc7c0] text-white px-4 py-3 flex items-center justify-between">
-              <h3 className="text-[15px] font-bold">
-                교외 활동 내역 ({formatKoreanDate(selectedDate)})
+          <div className="bg-white border border-[#bdbdbd] rounded-[5px] shadow-xl w-full max-w-[740px] max-h-[88vh] flex flex-col">
+            <div className="px-5 py-3.5 bg-[#8bc7c0] text-white flex items-center justify-between rounded-t-[4px]">
+              <h3 className="text-[17px] font-bold">
+                과구리 탐활서 데이터 붙여넣기
               </h3>
               <button
                 type="button"
-                onClick={() => setShowExternalModal(false)}
-                className="text-white/90 hover:text-white text-lg font-bold"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-              {externalRecords.length === 0 ? (
-                <p className="text-[14px] text-[#6b7280] py-6 text-center">
-                  선택된 날짜에 등록된 교외 활동이 없습니다.
-                </p>
-              ) : (
-                externalRecords.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="border border-[#cccccc] rounded-[2px] overflow-hidden"
-                  >
-                    <div className="bg-[#f8f9fa] px-3 py-1.5 text-[12px] text-[#666666] border-b border-[#cccccc]">
-                      {rec.submittedAt}
-                    </div>
-                    <table className="w-full border-collapse">
-                      <tbody>
-                        <tr>
-                          <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                            활동시간
-                          </th>
-                          <td className="bg-white text-[#111827] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                            {rec.timeText}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                            활동장소
-                          </th>
-                          <td className="bg-white text-[#111827] font-bold text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                            {rec.rawLocation}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                            활동내용
-                          </th>
-                          <td className="bg-white text-[#111827] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                            {rec.topic}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                            대표학생
-                          </th>
-                          <td className="bg-white text-[#111827] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                            {rec.leader}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-b border-[#dddddd] text-center">
-                            참가학생
-                          </th>
-                          <td className="bg-white text-[#111827] text-[13px] px-3 py-2 border-b border-[#dddddd]">
-                            {rec.members}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="w-[88px] bg-[#f2f2f2] font-bold text-[#222222] text-[13px] px-2.5 py-2 border-r border-[#dddddd] text-center">
-                            지도교사
-                          </th>
-                          <td className="bg-white text-[#111827] text-[13px] px-3 py-2">
-                            {rec.teacher}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 9. 과구리 탐활서 데이터 붙여넣기 모달 (실시간 파싱 미리보기 포함) */}
-      {isPasteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#d1d5db] rounded-[4px] shadow-xl max-w-[680px] w-full overflow-hidden">
-            <div className="bg-[#8bc7c0] text-white px-4 py-3 flex items-center justify-between">
-              <h3 className="text-[15px] font-bold">탐활서 데이터 붙여넣기</h3>
-              <button
-                type="button"
                 onClick={() => setIsPasteModalOpen(false)}
-                className="text-white/90 hover:text-white text-lg font-bold"
+                className="text-white/90 hover:text-white text-[18px] font-bold px-1"
               >
-                ×
+                ✕
               </button>
             </div>
 
-            <div className="p-4 space-y-3 text-[13px]">
+            <div className="p-5 overflow-y-auto space-y-4 text-[14px]">
               <p className="text-[#374151] leading-relaxed">
-                과구리(<strong>jshsus.kr</strong>)의 <strong>[탐활서 확인]</strong> 화면을 드래그해 복사(<code>Ctrl+C</code>)한 뒤 붙여넣으면 자동으로 날짜·장소·학생을 분석해 평면도에 반영합니다.
+                과구리(jshsus.kr) <strong>탐활서 확인</strong> 페이지의 내용을 드래그해 복사(Ctrl+C)한 뒤 아래 입력창에 붙여넣으세요(Ctrl+V). 날짜·시간·장소가 자동으로 파싱되어 지도에 반영됩니다.
               </p>
 
               <textarea
                 rows={7}
-                value={pasteInput}
-                onChange={(e) => setPasteInput(e.target.value)}
-                placeholder={`예시:\n활동날짜\t11월 16일\n활동시간\t19:10 ~ 20:20, 20:30 ~ 21:30\n활동장소\t코딩실\n활동내용\t소프트웨어 경시대회 준비\n대표학생\t1117 조영우\n참가학생\t1114 이예지, 1310 서준혁\n지도교사\t진정숙`}
-                className="w-full border border-[#d1d5db] rounded-[4px] p-2.5 text-[13px] font-mono focus:outline-none focus:border-[#8bc7c0]"
+                value={pasteText}
+                onChange={(e) => {
+                  setPasteText(e.target.value);
+                  setPasteStatus(null);
+                }}
+                placeholder="여기에 과구리 탐활서 텍스트를 붙여넣으세요..."
+                className="w-full p-3 border border-[#bdbdbd] rounded-[4px] text-[13.5px] font-normal text-[#111111] focus:border-[#8bc7c0] focus:outline-none"
               />
 
-              {/* 실시간 파싱 미리보기 표 */}
-              {liveParsedPreview.length > 0 && (
-                <div className="border border-[#d1d5db] rounded-[4px] overflow-hidden">
-                  <div className="bg-[#eef7f6] px-3 py-1.5 text-[12px] font-bold text-[#3d7871] border-b border-[#d1d5db]">
-                    자동 인식 미리보기 ({liveParsedPreview.length}건)
+              {pasteStatus && (
+                <div className="p-3 rounded-[4px] bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
+                  {pasteStatus}
+                </div>
+              )}
+
+              <div className="border border-[#e5e7eb] rounded-[4px] bg-[#fafafa] p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-[#111111] text-[13.5px]">
+                    자동 파싱 미리보기 ({previewParsed.length}건 인식됨)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetDefaultData}
+                    className="text-[12.5px] text-[#2f6861] font-bold hover:underline"
+                  >
+                    기본 데이터(27건)로 초기화
+                  </button>
+                </div>
+
+                {previewParsed.length === 0 ? (
+                  <div className="text-[13px] text-[#6b7280] py-2">
+                    텍스트를 붙여넣으면 인식된 날짜·장소·대표학생 목록이 여기에 표시됩니다.
                   </div>
-                  <div className="max-h-36 overflow-y-auto">
-                    <table className="w-full text-[12px] border-collapse">
+                ) : (
+                  <div className="max-h-[180px] overflow-y-auto border border-[#e5e7eb] bg-white rounded-[3px]">
+                    <table className="w-full text-left border-collapse text-[12.5px]">
                       <thead>
-                        <tr className="bg-[#f8f9fa] border-b border-[#e5e7eb] text-[#374151]">
-                          <th className="px-2.5 py-1.5 text-left">날짜</th>
-                          <th className="px-2.5 py-1.5 text-left">매핑된 실</th>
-                          <th className="px-2.5 py-1.5 text-left">대표학생</th>
-                          <th className="px-2.5 py-1.5 text-left">활동내용</th>
+                        <tr className="bg-[#f2f2f2] border-b border-[#e5e7eb] text-[#222222]">
+                          <th className="py-1.5 px-2.5">활동날짜</th>
+                          <th className="py-1.5 px-2.5">원본 장소 → 매핑된 실</th>
+                          <th className="py-1.5 px-2.5">대표학생</th>
+                          <th className="py-1.5 px-2.5">활동내용</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#f1f5f9]">
-                        {liveParsedPreview.map((item) => {
-                          const meta = ROOM_META_MAP[item.roomId];
+                      <tbody>
+                        {previewParsed.map((item) => {
+                          const meta = ROOM_BY_ID[item.roomId];
                           return (
-                            <tr key={item.id}>
-                              <td className="px-2.5 py-1.5 whitespace-nowrap">{item.date}</td>
-                              <td className="px-2.5 py-1.5 whitespace-nowrap font-semibold text-[#437f78]">
-                                {meta ? `${meta.buildingName} ${meta.name}` : item.rawLocation}
+                            <tr key={item.id} className="border-b border-[#f3f4f6]">
+                              <td className="py-1.5 px-2.5 whitespace-nowrap">{item.date}</td>
+                              <td className="py-1.5 px-2.5">
+                                <span className="text-[#6b7280]">{item.rawLocation}</span>
+                                <span className="mx-1">→</span>
+                                <strong className="text-[#2f6861]">
+                                  {meta ? `${meta.buildingName} ${meta.floor} ${meta.name}` : '교외'}
+                                </strong>
                               </td>
-                              <td className="px-2.5 py-1.5 whitespace-nowrap">{item.leader}</td>
-                              <td className="px-2.5 py-1.5 truncate max-w-[200px]">{item.topic}</td>
+                              <td className="py-1.5 px-2.5 whitespace-nowrap font-bold">
+                                {item.leader}
+                              </td>
+                              <td className="py-1.5 px-2.5 truncate max-w-[180px]">
+                                {item.topic}
+                              </td>
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
                   </div>
-                </div>
-              )}
-
-              {pasteStatus && (
-                <div
-                  className={`px-3 py-2 rounded-[4px] border text-[13px] ${
-                    pasteStatus.type === 'error'
-                      ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]'
-                      : 'bg-[#eef7f6] border-[#8bc7c0] text-[#2e5a55]'
-                  }`}
-                >
-                  {pasteStatus.message}
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#e5e7eb]">
-                <button
-                  type="button"
-                  onClick={handleRestoreDefaults}
-                  className="px-3 py-1.5 rounded-[4px] border border-[#d1d5db] text-[#4b5563] hover:bg-[#f3f4f6]"
-                >
-                  기본 실데이터 27건 복원
-                </button>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsPasteModalOpen(false)}
-                    className="px-3.5 py-1.5 rounded-[4px] border border-[#d1d5db] text-[#374151] hover:bg-[#f3f4f6]"
-                  >
-                    닫기
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleConfirmPaste}
-                    className="px-4 py-1.5 rounded-[4px] bg-[#8bc7c0] hover:bg-[#7ab8b1] text-white font-bold"
-                  >
-                    지도에 반영하기
-                  </button>
-                </div>
+                )}
               </div>
             </div>
+
+            <div className="px-5 py-3 bg-[#f9fafb] border-t border-[#e5e7eb] flex items-center justify-end gap-2 rounded-b-[4px]">
+              <button
+                type="button"
+                onClick={() => setIsPasteModalOpen(false)}
+                className="px-4 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-white hover:bg-[#f3f4f6] text-[13.5px] font-medium text-[#374151]"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyPastedData}
+                className="px-4 py-1.5 rounded-[4px] bg-[#8bc7c0] hover:bg-[#76b5ae] text-white text-[13.5px] font-bold"
+              >
+                지도에 반영하기
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* ====================================================================
+          6. 교외·기타 장소 상세 모달
+         ==================================================================== */}
+      {isExternalModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#bdbdbd] rounded-[5px] shadow-xl w-full max-w-[560px] max-h-[82vh] flex flex-col">
+            <div className="px-5 py-3.5 bg-[#8bc7c0] text-white flex items-center justify-between rounded-t-[4px]">
+              <h3 className="text-[17px] font-bold">
+                교외·기타 장소 탐활 내역 ({externalRecords.length}건)
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsExternalModalOpen(false)}
+                className="text-white/90 hover:text-white text-[18px] font-bold px-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-3">
+              {externalRecords.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="border border-[#cccccc] rounded-[4px] overflow-hidden"
+                >
+                  <table className="w-full border-collapse text-[13.5px]">
+                    <tbody>
+                      <tr className="border-b border-[#e5e7eb]">
+                        <th className="w-[88px] py-2 px-2.5 bg-[#f2f2f2] font-bold text-center border-r border-[#e5e7eb]">
+                          활동장소
+                        </th>
+                        <td className="py-2 px-3 font-bold text-[#111111]">
+                          {rec.rawLocation}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-[#e5e7eb]">
+                        <th className="py-2 px-2.5 bg-[#f2f2f2] font-bold text-center border-r border-[#e5e7eb]">
+                          활동내용
+                        </th>
+                        <td className="py-2 px-3">{rec.topic}</td>
+                      </tr>
+                      <tr className="border-b border-[#e5e7eb]">
+                        <th className="py-2 px-2.5 bg-[#f2f2f2] font-bold text-center border-r border-[#e5e7eb]">
+                          대표학생
+                        </th>
+                        <td className="py-2 px-3 font-bold">{rec.leader}</td>
+                      </tr>
+                      <tr className="border-b border-[#e5e7eb]">
+                        <th className="py-2 px-2.5 bg-[#f2f2f2] font-bold text-center border-r border-[#e5e7eb]">
+                          참가학생
+                        </th>
+                        <td className="py-2 px-3">{rec.members}</td>
+                      </tr>
+                      <tr>
+                        <th className="py-2 px-2.5 bg-[#f2f2f2] font-bold text-center border-r border-[#e5e7eb]">
+                          지도교사
+                        </th>
+                        <td className="py-2 px-3">{rec.teacher}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-5 py-3 bg-[#f9fafb] border-t border-[#e5e7eb] flex justify-end rounded-b-[4px]">
+              <button
+                type="button"
+                onClick={() => setIsExternalModalOpen(false)}
+                className="px-4 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-white hover:bg-[#f3f4f6] text-[13.5px] font-medium"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 하단 안내 토스트 */}
+      {toastMsg && (
+        <div className="fixed bottom-5 right-5 z-50 bg-[#222222] text-white px-4 py-2.5 rounded-[4px] shadow-lg text-[13.5px] font-medium">
+          {toastMsg}
         </div>
       )}
     </div>

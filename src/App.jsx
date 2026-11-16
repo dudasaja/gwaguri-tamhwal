@@ -47,15 +47,9 @@ const BUILDINGS = {
     floors: {
       '1F': {
         label: '1F',
-        corridor: '◀ 서측 계단 | 1층 복도 | 동측 계단 (면학실 방면) ▶',
-        topRooms: [
-          { id: 'seongsil_1f_admin', name: '행정실', sub: '시설·준비구역' },
-          { id: 'seongsil_1f_principal', name: '교장실', sub: '시설·준비구역' },
-          { id: 'seongsil_1f_council', name: '교직원협의실', sub: '시설·준비구역' },
-          { id: 'seongsil_1f_health', name: '보건실', sub: '시설·준비구역' },
-        ],
+        corridor: '◀ 서측 계단 | 1층 복도 | 동측 계단 ▶',
+        topRooms: [],
         bottomRooms: [
-          { id: 'seongsil_1f_lobby', name: '중앙현관', sub: '시설·준비구역' },
           { id: 'seongsil_1f_ai', name: 'AI실', sub: '연구·정보구역' },
           { id: 'seongsil_1f_coding', name: '코딩실', sub: '구 멀티실' },
           { id: 'seongsil_1f_info', name: '정보실', sub: '정보·전산구역' },
@@ -71,8 +65,6 @@ const BUILDINGS = {
           { id: 'seongsil_2f_1_4', name: '1-4반 교실', sub: '1학년 학급교실' },
         ],
         bottomRooms: [
-          { id: 'seongsil_2f_main_office', name: '본교무실', sub: '교무·행정구역' },
-          { id: 'seongsil_2f_study1', name: '제1면학실', sub: '1학년 자기주도학습실' },
           { id: 'seongsil_2f_wee', name: '위클래스·상담실', sub: '상담·진로지원구역' },
         ],
       },
@@ -87,8 +79,6 @@ const BUILDINGS = {
         ],
         bottomRooms: [
           { id: 'seongsil_3f_2_4', name: '2-4반 교실', sub: '2학년 학급교실' },
-          { id: 'seongsil_3f_grade2', name: '2학년부 교무실', sub: '교무·행정구역' },
-          { id: 'seongsil_3f_study2', name: '제2면학실', sub: '2학년 자기주도학습실' },
         ],
       },
       '4F': {
@@ -103,7 +93,6 @@ const BUILDINGS = {
         bottomRooms: [
           { id: 'seongsil_4f_3_3', name: '3-3반 교실', sub: '3학년 학급교실' },
           { id: 'seongsil_4f_3_4', name: '3-4반 교실', sub: '3학년 학급교실' },
-          { id: 'seongsil_4f_study3', name: '제3면학실', sub: '3학년 자기주도학습실' },
         ],
       },
     },
@@ -247,7 +236,6 @@ const RAW_ALIAS_ENTRIES = [
   ['수학2실', 'chang_2f_math2'],
   ['수학연구실', 'chang_2f_math_lab'],
   ['수학탐구실', 'chang_2f_math_lab'],
-  ['기초과학세미나실', 'chang_2f_seminar'],
   ['지구과학세미나실', 'chang_1f_seminar'],
   ['지구과학실험실', 'chang_1f_earth_lab'],
   ['지구과학r&e', 'chang_1f_earth_re'],
@@ -271,18 +259,10 @@ const RAW_ALIAS_ENTRIES = [
   ['멀티실', 'seongsil_1f_coding'],
   ['ai실', 'seongsil_1f_ai'],
   ['정보실', 'seongsil_1f_info'],
-  ['행정실', 'seongsil_1f_admin'],
-  ['교장실', 'seongsil_1f_principal'],
-  ['교직원협의실', 'seongsil_1f_council'],
-  ['보건실', 'seongsil_1f_health'],
-  ['중앙현관', 'seongsil_1f_lobby'],
   ['1-1', 'seongsil_2f_1_1'],
   ['1-2', 'seongsil_2f_1_2'],
   ['1-3', 'seongsil_2f_1_3'],
   ['1-4', 'seongsil_2f_1_4'],
-  ['본교무실', 'seongsil_2f_main_office'],
-  ['제1면학실', 'seongsil_2f_study1'],
-  ['1면학실', 'seongsil_2f_study1'],
   ['위클래스', 'seongsil_2f_wee'],
   ['상담실', 'seongsil_2f_wee'],
   ['2-1', 'seongsil_3f_2_1'],
@@ -291,9 +271,6 @@ const RAW_ALIAS_ENTRIES = [
   ['2-4', 'seongsil_3f_2_4'],
   ['도서관', 'seongsil_3f_library'],
   ['글마루', 'seongsil_3f_library'],
-  ['2학년부', 'seongsil_3f_grade2'],
-  ['제2면학실', 'seongsil_3f_study2'],
-  ['2면학실', 'seongsil_3f_study2'],
   ['3-1', 'seongsil_4f_3_1'],
   ['3-2', 'seongsil_4f_3_2'],
   ['3-3', 'seongsil_4f_3_3'],
@@ -302,8 +279,6 @@ const RAW_ALIAS_ENTRIES = [
   ['메이커', 'seongsil_4f_maker'],
   ['학생회실', 'seongsil_4f_council'],
   ['학생자치', 'seongsil_4f_council'],
-  ['제3면학실', 'seongsil_4f_study3'],
-  ['3면학실', 'seongsil_4f_study3'],
   ['음악실', 'seongchui_1f_music'],
   ['피아노', 'seongchui_1f_piano'],
   ['기악실', 'seongchui_1f_piano'],
@@ -1341,11 +1316,11 @@ export default function App() {
       </header>
 
       {/* ====================================================================
-          2. 공식 과구리 2줄 상단 메뉴 바 (총 높이 113px, 20px 볼드)
+          2. 공식 과구리 2줄 상단 메뉴 바 (실제 과구리와 동일한 조밀한 줄간격)
          ==================================================================== */}
       <nav className="w-full bg-white border-b border-[#d8d8d8]">
-        <div className="max-w-[1340px] mx-auto px-6 py-[16px]">
-          <div className="flex flex-wrap items-center justify-center gap-x-[68px] gap-y-2 text-[20px] font-bold text-[#111111] tracking-[-0.02em] leading-[24px]">
+        <div className="max-w-[1340px] mx-auto px-6 py-[10px]">
+          <div className="flex flex-wrap items-center justify-center gap-x-[64px] gap-y-1 text-[20px] font-bold text-[#111111] tracking-[-0.02em] leading-[22px]">
             {[
               '공지사항',
               '탐활서',
@@ -1367,14 +1342,14 @@ export default function App() {
                     showToast(`'${menu}' 메뉴는 기존 과구리(jshsus.kr)에서 제공됩니다.`);
                   }
                 }}
-                className="hover:text-[#5ea69e] transition-colors py-1"
+                className="hover:text-[#5ea69e] transition-colors py-[2px]"
               >
                 {menu}
               </button>
             ))}
           </div>
 
-          <div className="mt-[18px] flex flex-wrap items-center justify-center gap-x-[68px] gap-y-2 text-[20px] font-bold tracking-[-0.02em] leading-[24px]">
+          <div className="mt-[6px] flex flex-wrap items-center justify-center gap-x-[64px] gap-y-1 text-[20px] font-bold tracking-[-0.02em] leading-[22px]">
             {[
               '기상곡 신청',
               '세특 바이트 계산기',
@@ -1394,9 +1369,9 @@ export default function App() {
                       showToast(`'${menu}' 메뉴는 기존 과구리(jshsus.kr)에서 제공됩니다.`);
                     }
                   }}
-                  className={`py-1 transition-colors ${
+                  className={`py-[2px] transition-colors ${
                     isActive
-                      ? 'text-[#5ea69e] border-b-[3px] border-[#8bc7c0]'
+                      ? 'text-[#5ea69e] border-b-[2px] border-[#8bc7c0]'
                       : 'text-[#111111] hover:text-[#5ea69e]'
                   }`}
                 >
@@ -2140,19 +2115,21 @@ export default function App() {
                 </div>
 
                 <div className="border border-[#d1d5db] rounded-[5px] bg-[#fafafa] p-4 space-y-3.5">
-                  <div
-                    className={`grid gap-3 ${
-                      currentFloorObj.topRooms.length === 1
-                        ? 'grid-cols-1'
-                        : currentFloorObj.topRooms.length === 2
-                        ? 'grid-cols-1 sm:grid-cols-2'
-                        : currentFloorObj.topRooms.length === 3
-                        ? 'grid-cols-1 sm:grid-cols-3'
-                        : 'grid-cols-2 sm:grid-cols-4'
-                    }`}
-                  >
-                    {currentFloorObj.topRooms.map(renderRoomCard)}
-                  </div>
+                  {currentFloorObj.topRooms.length > 0 && (
+                    <div
+                      className={`grid gap-3 ${
+                        currentFloorObj.topRooms.length === 1
+                          ? 'grid-cols-1'
+                          : currentFloorObj.topRooms.length === 2
+                          ? 'grid-cols-1 sm:grid-cols-2'
+                          : currentFloorObj.topRooms.length === 3
+                          ? 'grid-cols-1 sm:grid-cols-3'
+                          : 'grid-cols-2 sm:grid-cols-4'
+                      }`}
+                    >
+                      {currentFloorObj.topRooms.map(renderRoomCard)}
+                    </div>
+                  )}
 
                   <div className="py-2.5 px-4 rounded-[4px] bg-[#e5e7eb] text-center text-[13px] font-bold text-[#374151] tracking-tight">
                     {currentFloorObj.corridor}
@@ -2161,7 +2138,9 @@ export default function App() {
                   {currentFloorObj.bottomRooms.length > 0 && (
                     <div
                       className={`grid gap-3 ${
-                        currentFloorObj.bottomRooms.length === 2
+                        currentFloorObj.bottomRooms.length === 1
+                          ? 'grid-cols-1'
+                          : currentFloorObj.bottomRooms.length === 2
                           ? 'grid-cols-1 sm:grid-cols-2'
                           : currentFloorObj.bottomRooms.length === 3
                           ? 'grid-cols-1 sm:grid-cols-3'

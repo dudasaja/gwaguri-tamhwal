@@ -792,6 +792,7 @@ const DEFAULT_RECORDS = RAW_DEFAULT_RECORDS.map((rec) => ({
 }));
 
 const STORAGE_KEY = 'gwaguri_tamhwal_records_v4';
+const ADMIN_PASSWORD = '12031213';
 
 /**
  * ============================================================================
@@ -1098,8 +1099,24 @@ export default function App() {
   const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [pasteStatus, setPasteStatus] = useState(null);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminPasswordError, setAdminPasswordError] = useState(false);
   const [isExternalModalOpen, setIsExternalModalOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+
+  const openPasteModal = () => {
+    setPasteStatus(null);
+    setAdminPassword('');
+    setAdminPasswordError(false);
+    setIsPasteModalOpen(true);
+  };
+
+  const closePasteModal = () => {
+    setIsPasteModalOpen(false);
+    setAdminPassword('');
+    setAdminPasswordError(false);
+    setPasteStatus(null);
+  };
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -1292,6 +1309,10 @@ export default function App() {
   const previewParsed = useMemo(() => parseGwaguriText(pasteText), [pasteText]);
 
   const handleApplyPastedData = () => {
+    if (adminPassword !== ADMIN_PASSWORD) {
+      setAdminPasswordError(true);
+      return;
+    }
     if (previewParsed.length === 0) {
       setPasteStatus('인식된 탐활 내역이 없습니다. 과구리 화면의 텍스트를 그대로 복사해 붙여넣어 주세요.');
       return;
@@ -1299,18 +1320,20 @@ export default function App() {
     setRecords(previewParsed);
     const firstDate = previewParsed[0].date;
     if (firstDate) setSelectedDate(firstDate);
-    setIsPasteModalOpen(false);
     setPasteText('');
-    setPasteStatus(null);
+    closePasteModal();
     showToast(`탐활 데이터 ${previewParsed.length}건이 지도에 반영되었습니다.`);
   };
 
   const handleResetDefaultData = () => {
+    if (adminPassword !== ADMIN_PASSWORD) {
+      setAdminPasswordError(true);
+      return;
+    }
     setRecords(DEFAULT_RECORDS);
     setSelectedDate(todayStr);
-    setIsPasteModalOpen(false);
     setPasteText('');
-    setPasteStatus(null);
+    closePasteModal();
     showToast('기본 과구리 탐활 데이터 27건으로 복원되었습니다.');
   };
 
@@ -1484,10 +1507,7 @@ export default function App() {
           {/* 우측: 공식 과구리 헤더 버튼 스타일 */}
           <button
             type="button"
-            onClick={() => {
-              setPasteStatus(null);
-              setIsPasteModalOpen(true);
-            }}
+            onClick={openPasteModal}
             className="border border-[#4c7a75] bg-transparent hover:bg-white/15 text-[#1e3835] rounded-[3px] px-3 py-1 text-[13px] font-normal transition-colors whitespace-nowrap shrink-0"
           >
             탐활서 데이터 붙여넣기
@@ -1516,8 +1536,7 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   if (menu === '탐활서') {
-                    setPasteStatus(null);
-                    setIsPasteModalOpen(true);
+                    openPasteModal();
                   } else {
                     showToast(`'${menu}' 메뉴는 기존 과구리(jshsus.kr)에서 제공됩니다.`);
                   }
@@ -2876,7 +2895,7 @@ export default function App() {
               </h3>
               <button
                 type="button"
-                onClick={() => setIsPasteModalOpen(false)}
+                onClick={closePasteModal}
                 className="text-white/90 hover:text-white text-[18px] font-bold px-1"
               >
                 ✕
@@ -2969,12 +2988,51 @@ export default function App() {
                   </div>
                 )}
               </div>
+
+              {/* 관리자 비밀번호 입력 영역 */}
+              <div className="border border-[#e5e7eb] rounded-[4px] bg-[#f9fafb] p-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <label
+                    htmlFor="admin-password-input"
+                    className="text-[13.5px] font-bold text-[#111111] shrink-0"
+                  >
+                    관리자 비밀번호 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="admin-password-input"
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => {
+                      setAdminPassword(e.target.value);
+                      if (adminPasswordError) setAdminPasswordError(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleApplyPastedData();
+                      }
+                    }}
+                    placeholder="관리자 비밀번호 입력"
+                    autoComplete="off"
+                    className={`w-full sm:w-[260px] px-3 py-1.5 rounded-[4px] border text-[13.5px] focus:outline-none transition-colors ${
+                      adminPasswordError
+                        ? 'border-red-500 bg-red-50 text-[#111111] focus:border-red-500'
+                        : 'border-[#bdbdbd] bg-white text-[#111111] focus:border-[#8bc7c0]'
+                    }`}
+                  />
+                </div>
+                {adminPasswordError && (
+                  <p className="mt-2 text-[12.5px] font-bold text-red-600">
+                    관리자 비밀번호가 올바르지 않습니다.
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="px-5 py-3 bg-[#f9fafb] border-t border-[#e5e7eb] flex items-center justify-end gap-2 rounded-b-[4px]">
               <button
                 type="button"
-                onClick={() => setIsPasteModalOpen(false)}
+                onClick={closePasteModal}
                 className="px-4 py-1.5 rounded-[4px] border border-[#bdbdbd] bg-white hover:bg-[#f3f4f6] text-[13.5px] font-medium text-[#374151]"
               >
                 취소
